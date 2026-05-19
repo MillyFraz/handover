@@ -1,0 +1,2965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Handover — Frazer Innes · Memphis Bound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,900&family=JetBrains+Mono:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f1e6cf;
+    --cream-deep: #e8dab9;
+    --paper: #f8efd9;
+    --ink: #1a120b;
+    --ink-soft: #3a2a1c;
+    --rust: #b53a1a;
+    --burnt: #8a2614;
+    --gold: #c89030;
+    --gold-deep: #a06a18;
+    --magnolia: #f5e9d4;
+    --bourbon: #6b3410;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+
+  /* ===== UNLOCK SCREEN (SHELL GAME) ===== */
+  body.locked { overflow: hidden; height: 100vh; }
+  /* While locked, freeze all CSS animations underneath the unlock screen
+     so the loader / hero / nav animations play AFTER the user unlocks */
+  body.locked *:not(.unlock):not(.unlock *) {
+    animation-play-state: paused !important;
+  }
+  .unlock {
+    position: fixed; inset: 0; z-index: 10500;
+    background: var(--ink);
+    color: var(--cream);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+    transition: opacity 0.8s cubic-bezier(0.7, 0, 0.2, 1), transform 1s cubic-bezier(0.85, 0, 0.15, 1);
+    padding: 2rem;
+  }
+  .unlock.gone { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+
+  /* Stars-and-stripes bunting at the top */
+  .unlock-bunting {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 32px;
+    background:
+      repeating-linear-gradient(90deg, #b22234 0 60px, #ffffff 60px 120px);
+    opacity: 0.85;
+  }
+  .unlock-bunting::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 200px; height: 100%;
+    background: #3c3b6e;
+    background-image: radial-gradient(circle, #ffffff 1.5px, transparent 2px);
+    background-size: 20px 16px;
+  }
+
+  .unlock-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .unlock-eyebrow::before { content: '★ '; }
+  .unlock-eyebrow::after { content: ' ★'; }
+
+  .unlock-title {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 1;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 0.5rem;
+    transform: rotate(-2deg);
+  }
+  .unlock-sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    color: var(--cream);
+    text-align: center;
+    margin-bottom: 0.4rem;
+    max-width: 600px;
+  }
+  .unlock-sub em {
+    color: var(--rust);
+    font-weight: 600;
+    font-style: italic;
+  }
+  .unlock-instructions {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(241, 230, 207, 0.6);
+    text-align: center;
+    margin-bottom: 3rem;
+    min-height: 1rem;
+  }
+  .unlock-instructions strong { color: var(--gold); }
+
+  /* The play area */
+  .shell-game {
+    position: relative;
+    width: min(700px, 95vw);
+    height: 280px;
+    margin-bottom: 2rem;
+  }
+  .shell-floor {
+    position: absolute;
+    bottom: 30px; left: 0; right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0 12px, transparent 12px 22px);
+    opacity: 0.3;
+  }
+
+  .cup {
+    position: absolute;
+    bottom: 30px;
+    width: 130px;
+    height: 170px;
+    cursor: none;
+    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    will-change: transform, left;
+  }
+  .cup svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+  .cup.lifting {
+    animation: cupLift 0.6s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+  @keyframes cupLift {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-180px); }
+  }
+  .cup.wrong {
+    animation: cupShake 0.5s ease-in-out;
+  }
+  @keyframes cupShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .cup.shuffling {
+    transition: left 0.45s cubic-bezier(0.45, 0, 0.55, 1);
+  }
+
+  .football {
+    position: absolute;
+    bottom: 38px;
+    width: 70px;
+    height: 42px;
+    transition: left 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    z-index: 1;
+    pointer-events: none;
+    will-change: left;
+  }
+  .football svg { width: 100%; height: 100%; }
+  .football.hidden { opacity: 0; }
+
+  .unlock-controls {
+    display: flex; gap: 1rem; align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .unlock-btn {
+    background: var(--rust);
+    color: var(--cream);
+    border: 2px solid var(--rust);
+    padding: 0.9rem 1.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s, transform 0.3s;
+    font-weight: 700;
+  }
+  .unlock-btn:hover {
+    background: var(--burnt);
+    border-color: var(--burnt);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--gold);
+  }
+  .unlock-btn.ghost {
+    background: transparent;
+    color: rgba(241, 230, 207, 0.5);
+    border-color: rgba(241, 230, 207, 0.3);
+  }
+  .unlock-btn.ghost:hover {
+    background: transparent;
+    color: var(--cream);
+    border-color: var(--cream);
+    box-shadow: 4px 4px 0 rgba(241, 230, 207, 0.2);
+  }
+
+  .unlock-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(241, 230, 207, 0.5);
+    margin-top: 2rem;
+  }
+  .unlock-stat .val { color: var(--gold); }
+
+  /* Win/lose overlay */
+  .unlock-result {
+    position: absolute;
+    inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(26, 18, 11, 0.95);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s;
+    z-index: 10;
+    padding: 2rem;
+  }
+  .unlock-result.active { opacity: 1; pointer-events: auto; }
+  .unlock-result .icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+  .unlock-result h3 {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(4rem, 10vw, 8rem);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .unlock-result.win h3 { color: var(--gold); }
+  .unlock-result.lose h3 { color: var(--rust); }
+  .unlock-result p {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    color: var(--cream);
+    margin-bottom: 2rem;
+    text-align: center;
+    max-width: 500px;
+  }
+
+  @media (max-width: 700px) {
+    .shell-game { height: 220px; }
+    .cup { width: 95px; height: 125px; }
+    .football { width: 52px; height: 32px; }
+    .unlock-title { font-size: 3.5rem; }
+  }
+
+  /* ===== END UNLOCK ===== */
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-feature-settings: "ss01", "ss02";
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ===== CURSOR ===== */
+  .cursor {
+    position: fixed; width: 12px; height: 12px;
+    background: var(--ink); border-radius: 50%;
+    pointer-events: none; z-index: 10600;
+    transition: width 0.25s, height 0.25s, background 0.25s, border-radius 0.25s;
+    mix-blend-mode: difference;
+    transform: translate(-50%, -50%);
+  }
+  .cursor.hover { width: 80px; height: 80px; background: var(--rust); }
+  .cursor.drag { width: 100px; height: 100px; background: var(--gold); }
+  /* While the unlock screen is up, the body is locked.
+     The black background eats the blend-mode cursor, so swap to a solid cream dot. */
+  body.locked .cursor {
+    background: var(--cream);
+    mix-blend-mode: normal;
+  }
+  body.locked .cursor.hover { background: var(--gold); }
+  body.locked .cursor-trail {
+    background: var(--gold);
+    mix-blend-mode: normal;
+  }
+  .cursor-trail {
+    position: fixed; width: 6px; height: 6px;
+    background: var(--rust); border-radius: 50%;
+    pointer-events: none; z-index: 10599;
+    mix-blend-mode: multiply;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ===== AMBIENT PARTICLES CANVAS ===== */
+  #particles {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  }
+
+  /* GRAIN */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0.12;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(106, 52, 16, 0.12) 100%);
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px; width: 0%;
+    background: var(--gold); z-index: 101;
+    transition: width 0.1s linear;
+    opacity: 0; animation: fadeIn 1s 5.5s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* ===== NOW PLAYING WIDGET ===== */
+  .now-playing {
+    position: fixed; bottom: 2rem; left: 2rem; z-index: 50;
+    background: rgba(26, 18, 11, 0.92);
+    backdrop-filter: blur(8px);
+    color: var(--cream);
+    padding: 0.9rem 1.2rem;
+    border: 1px solid rgba(241, 230, 207, 0.2);
+    border-radius: 6px;
+    display: flex; align-items: center; gap: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0; transform: translateY(20px);
+    animation: nowPlayingIn 0.8s 5.8s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    transition: transform 0.4s;
+    cursor: none;
+    max-width: 320px;
+  }
+  .now-playing:hover { transform: translateY(-4px); }
+  @keyframes nowPlayingIn { to { opacity: 1; transform: translateY(0); } }
+  .np-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--rust); position: relative; flex-shrink: 0;
+    animation: spin 4s linear infinite;
+  }
+  .np-icon::before {
+    content: ''; position: absolute; inset: 4px; border-radius: 50%;
+    background: var(--ink); border: 1px solid var(--gold);
+  }
+  .np-icon::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 3px; height: 3px; background: var(--gold); border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .np-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .np-label { color: var(--gold); font-size: 0.55rem; opacity: 0.8; }
+  .np-title { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 0.95rem; letter-spacing: 0; text-transform: none; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ===== SIDE RAIL ===== */
+  .rail {
+    position: fixed; top: 50%; right: 2rem; transform: translateY(-50%); z-index: 50;
+    display: flex; flex-direction: column; gap: 1.2rem;
+    opacity: 0; animation: fadeIn 1s 5.8s forwards;
+    mix-blend-mode: difference;
+  }
+  .rail-item {
+    display: flex; align-items: center; gap: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--cream); text-decoration: none;
+    transition: opacity 0.3s, transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
+    opacity: 0.4; cursor: none;
+  }
+  .rail-item .num { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 0.9rem; color: var(--gold); }
+  .rail-item .bar { width: 24px; height: 1px; background: currentColor; transition: width 0.4s cubic-bezier(0.2, 0.9, 0.2, 1); }
+  .rail-item .label { opacity: 0; transition: opacity 0.3s, transform 0.4s; transform: translateX(-8px); }
+  .rail-item:hover, .rail-item.active { opacity: 1; transform: translateX(-4px); }
+  .rail-item:hover .label, .rail-item.active .label { opacity: 1; transform: translateX(0); }
+  .rail-item.active .bar { width: 48px; background: var(--gold); }
+
+  /* ===== LOADER (CINEMATIC) ===== */
+  .loader {
+    position: fixed; inset: 0; background: var(--ink); z-index: 10000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.5rem; overflow: hidden;
+    animation: loaderOut 1.4s cubic-bezier(0.85, 0, 0.15, 1) 5s forwards;
+  }
+
+  /* Aperture iris closing */
+  .loader-iris {
+    position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  }
+  .loader-iris-blade {
+    position: absolute; top: 50%; left: 50%;
+    width: 0; height: 0;
+    border-left: 100vw solid transparent;
+    border-right: 100vw solid transparent;
+    border-bottom: 60vh solid var(--ink);
+    transform-origin: 50% 100%;
+    transform: translate(-50%, -100%);
+    opacity: 0.9;
+  }
+
+  /* Ticker tape behind */
+  .loader-ticker {
+    position: absolute; top: 18%; left: 0; right: 0;
+    overflow: hidden; pointer-events: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(241, 230, 207, 0.18);
+    letter-spacing: 0.3em;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  .loader-ticker .tt {
+    display: inline-block;
+    animation: ticker 14s linear infinite;
+    padding-left: 100%;
+  }
+  .loader-ticker.bottom { top: auto; bottom: 18%; }
+  .loader-ticker.bottom .tt { animation-direction: reverse; animation-duration: 18s; }
+  @keyframes ticker { to { transform: translateX(-100%); } }
+
+  .loader-pre {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--gold); line-height: 1;
+    transform: rotate(-3deg); opacity: 0;
+    animation: scriptIn 0.9s 0.4s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    z-index: 6;
+  }
+  @keyframes scriptIn {
+    from { opacity: 0; transform: rotate(-3deg) translateY(20px) scale(0.9); }
+    to { opacity: 1; transform: rotate(-3deg) translateY(0) scale(1); }
+  }
+
+  .loader-text {
+    font-family: 'Instrument Serif', serif;
+    color: var(--cream);
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    font-style: italic;
+    overflow: hidden;
+    display: flex; gap: 0.05em;
+    z-index: 6;
+  }
+  .loader-text span {
+    display: inline-block; transform: translateY(110%);
+    animation: loaderUp 0.9s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+  .loader-text span:nth-child(1) { animation-delay: 0.9s; }
+  .loader-text span:nth-child(2) { animation-delay: 1.05s; }
+  .loader-text span:nth-child(3) { animation-delay: 1.2s; }
+  .loader-text span:nth-child(4) { animation-delay: 1.35s; }
+  .loader-num { color: var(--rust); font-family: 'Fraunces', serif; font-weight: 300; }
+
+  /* Soundwave under the title */
+  .loader-wave {
+    display: flex; align-items: center; gap: 4px; height: 30px;
+    z-index: 6; opacity: 0;
+    animation: fadeIn 0.5s 1.7s forwards;
+  }
+  .loader-wave .bar {
+    width: 3px; background: var(--gold); border-radius: 1px;
+    animation: waveBar 0.9s ease-in-out infinite;
+  }
+  .loader-wave .bar:nth-child(1) { height: 30%; animation-delay: 0s; }
+  .loader-wave .bar:nth-child(2) { height: 60%; animation-delay: 0.1s; }
+  .loader-wave .bar:nth-child(3) { height: 100%; animation-delay: 0.2s; }
+  .loader-wave .bar:nth-child(4) { height: 80%; animation-delay: 0.3s; }
+  .loader-wave .bar:nth-child(5) { height: 100%; animation-delay: 0.4s; }
+  .loader-wave .bar:nth-child(6) { height: 60%; animation-delay: 0.5s; }
+  .loader-wave .bar:nth-child(7) { height: 90%; animation-delay: 0.6s; }
+  .loader-wave .bar:nth-child(8) { height: 40%; animation-delay: 0.7s; }
+  .loader-wave .bar:nth-child(9) { height: 70%; animation-delay: 0.8s; }
+  .loader-wave .bar:nth-child(10) { height: 30%; animation-delay: 0.3s; }
+  @keyframes waveBar {
+    0%, 100% { opacity: 0.5; transform: scaleY(0.5); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+  }
+
+  .loader-terminal {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; color: rgba(241, 230, 207, 0.7);
+    letter-spacing: 0.05em; line-height: 1.8;
+    margin-top: 0.5rem; min-width: 360px; text-align: left;
+    z-index: 6;
+  }
+  .loader-terminal .line { opacity: 0; animation: termIn 0.3s forwards; }
+  .loader-terminal .line .check { color: var(--gold); margin-right: 0.5rem; }
+  .loader-terminal .line .ok { color: var(--gold); }
+  .loader-terminal .line:nth-child(1) { animation-delay: 2.0s; }
+  .loader-terminal .line:nth-child(2) { animation-delay: 2.4s; }
+  .loader-terminal .line:nth-child(3) { animation-delay: 2.8s; }
+  .loader-terminal .line:nth-child(4) { animation-delay: 3.2s; }
+  .loader-terminal .line:nth-child(5) { animation-delay: 3.6s; }
+  .loader-terminal .line:nth-child(6) { animation-delay: 4.0s; }
+  @keyframes termIn { to { opacity: 1; } }
+  .loader-meta {
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(241, 230, 207, 0.4);
+    font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase;
+    opacity: 0; animation: termIn 0.6s 4.4s forwards; z-index: 6;
+  }
+  @keyframes loaderUp { to { transform: translateY(0); } }
+  @keyframes loaderOut { to { transform: translateY(-100%); } }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.75rem 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+    mix-blend-mode: difference; color: var(--cream);
+    opacity: 0; animation: navIn 1s 5.5s forwards;
+  }
+  @keyframes navIn { to { opacity: 1; } }
+  .nav-mark { font-family: 'Instrument Serif', serif; font-size: 1.1rem; font-style: italic; }
+  .nav-mark::before { content: '✦'; margin-right: 0.5rem; color: var(--gold); display: inline-block; animation: spin 12s linear infinite; }
+  .nav-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 2rem;
+  }
+  .nav-time .clock { display: flex; align-items: center; gap: 0.5rem; }
+  .nav-time .dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--rust); border-radius: 50%; animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(1.4); }
+  }
+
+  /* ===== HERO ===== */
+  .hero-wrap { height: 300vh; position: relative; }
+  .hero {
+    position: sticky; top: 0; height: 100vh; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(200, 144, 48, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 0%, rgba(181, 58, 26, 0.06) 0%, transparent 40%),
+      var(--cream);
+  }
+  .hero-sunburst {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180vh; height: 180vh; pointer-events: none; will-change: transform;
+  }
+  .hero-sunburst .rays { animation: spin 90s linear infinite; transform-origin: center; transform-box: fill-box; }
+  .hero-sunburst .rays-inner { animation: spinReverse 60s linear infinite; transform-origin: center; transform-box: fill-box; }
+  @keyframes spinReverse { to { transform: rotate(-360deg); } }
+
+  .hero-bg-num {
+    position: absolute; bottom: -6rem; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: 55vh; line-height: 1; color: var(--ink); opacity: 0.04;
+    pointer-events: none; user-select: none; letter-spacing: -0.05em; will-change: transform;
+  }
+
+  .hero-inner {
+    position: relative; z-index: 3; text-align: center; width: 100%;
+    padding: 0 2rem; will-change: transform, opacity;
+  }
+  .hero-pretitle {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1; color: var(--rust);
+    transform: rotate(-3deg); margin-bottom: -0.5rem; opacity: 0;
+    animation: scriptIn 0.9s 5.6s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+
+  /* SCRAMBLE TITLE */
+  .hero-title {
+    font-size: clamp(4rem, 16vw, 15rem);
+    font-weight: 300; line-height: 0.86; letter-spacing: -0.045em;
+  }
+  .hero-title .line { display: block; overflow: hidden; position: relative; }
+  .hero-title .scrambled { display: inline-block; }
+  .hero-title em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--rust); font-weight: 400; }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4em;
+    color: var(--ink-soft); margin-top: 3rem;
+    opacity: 0; animation: fadeIn 1s 7s forwards;
+  }
+  .hero-eyebrow span { color: var(--rust); }
+
+  /* PARALLAX STAMP */
+  .hero-stamp {
+    position: absolute; top: 8rem; right: 4rem;
+    width: 150px; height: 180px;
+    border: 2px solid var(--ink); background: var(--paper);
+    transform: rotate(8deg); padding: 0.8rem;
+    text-align: center; font-family: 'Fraunces', serif;
+    box-shadow: 6px 6px 0 rgba(26, 18, 11, 0.2);
+    opacity: 0; animation: stampIn 1s 6.2s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    z-index: 4; will-change: transform;
+  }
+  @keyframes stampIn {
+    from { opacity: 0; transform: rotate(8deg) scale(0.7) translateY(-30px); }
+    to { opacity: 1; transform: rotate(8deg) scale(1) translateY(0); }
+  }
+  .hero-stamp::before, .hero-stamp::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 10px;
+    background-image: radial-gradient(circle, var(--cream) 4px, transparent 5px);
+    background-size: 12px 12px; background-position: 0 50%;
+  }
+  .hero-stamp::before { top: -10px; }
+  .hero-stamp::after { bottom: -10px; transform: rotate(180deg); }
+  .hero-stamp .stamp-mark { font-family: 'Tangerine', cursive; font-size: 2.4rem; line-height: 0.9; color: var(--rust); margin-bottom: 0.3rem; }
+  .hero-stamp .stamp-place { font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .hero-stamp .stamp-state { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 0.9rem; color: var(--burnt); margin-bottom: 0.4rem; }
+  .hero-stamp .stamp-val { font-family: 'Fraunces', serif; font-weight: 900; font-size: 2rem; color: var(--ink); border-top: 1px solid var(--ink); padding-top: 0.3rem; line-height: 1; }
+
+  /* VINYL */
+  .hero-vinyl {
+    position: absolute; bottom: 6rem; left: 4rem;
+    width: 220px; height: 220px;
+    opacity: 0; animation: vinylIn 1.2s 6s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    z-index: 4; will-change: transform;
+  }
+  @keyframes vinylIn {
+    from { opacity: 0; transform: scale(0.6) rotate(-30deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  .hero-vinyl .disc { width: 100%; height: 100%; will-change: transform; }
+  .hero-vinyl-label {
+    position: absolute; bottom: -1.5rem; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--ink-soft); white-space: nowrap;
+  }
+
+  .hero-foot {
+    position: absolute; bottom: 2rem; left: 0; right: 0;
+    display: flex; justify-content: space-between; padding: 0 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em;
+    color: var(--ink-soft); opacity: 0; animation: fadeIn 1s 7.3s forwards; z-index: 3;
+  }
+  .hero-foot .scroll::after { content: ' ↓'; display: inline-block; animation: bounce 1.5s infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+  }
+
+  /* ===== MARQUEE ===== */
+  .marquee {
+    overflow: hidden; background: var(--ink); color: var(--cream);
+    padding: 2rem 0; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    position: relative; z-index: 3;
+  }
+  .marquee-track {
+    display: flex; gap: 3rem;
+    animation: scroll var(--mq-duration, 28s) linear infinite;
+    white-space: nowrap;
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    font-size: clamp(2rem, 5vw, 4rem);
+  }
+  .marquee-track .row { display: flex; gap: 3rem; align-items: center; }
+  .marquee-track .dot { color: var(--gold); font-size: 0.7em; display: inline-block; animation: spin 8s linear infinite; }
+  .marquee-track .note { color: var(--rust); font-size: 0.8em; }
+  @keyframes scroll { to { transform: translateX(-50%); } }
+
+  /* ===== INTRO ===== */
+  .intro {
+    min-height: 100vh; padding: 12rem 3rem 6rem;
+    position: relative; display: flex; align-items: center;
+    background: radial-gradient(circle at 80% 20%, rgba(181, 58, 26, 0.04) 0%, transparent 50%), var(--cream);
+  }
+  .intro-text {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 6.5vw, 6.5rem); line-height: 1.05;
+    letter-spacing: -0.03em; font-weight: 300; max-width: 1400px;
+  }
+  .intro-text em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--rust); font-weight: 400; }
+  .intro-text .script { font-family: 'Tangerine', cursive; color: var(--gold-deep); font-style: normal; font-size: 1.4em; font-weight: 700; }
+  .intro-text .word { display: inline-block; opacity: 0.15; transition: opacity 0.5s ease; }
+  .intro-text .word.lit { opacity: 1; }
+  .intro-meta {
+    position: absolute; top: 4rem; left: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--ink-soft);
+  }
+  .intro-meta::before { content: ''; display: inline-block; width: 30px; height: 1px; background: var(--ink); vertical-align: middle; margin-right: 1rem; }
+  .intro-byline {
+    position: absolute; bottom: 4rem; right: 3rem; text-align: right;
+    font-family: 'Tangerine', cursive; font-size: 2.5rem; line-height: 1;
+    color: var(--burnt); transform: rotate(-2deg);
+  }
+  .intro-byline small {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--ink-soft); margin-top: 0.5rem; transform: rotate(2deg);
+  }
+
+  /* ===== JOURNEY MAP ===== */
+  .journey {
+    background: var(--ink); color: var(--cream);
+    padding: 10rem 3rem; position: relative; overflow: hidden;
+  }
+  .journey-head {
+    text-align: center; margin-bottom: 5rem;
+    position: relative; z-index: 2;
+  }
+  .journey-head .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1.5rem;
+  }
+  .journey-head h2 {
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    font-size: clamp(3rem, 8vw, 7rem); line-height: 1; letter-spacing: -0.02em;
+  }
+  .journey-head h2 em { color: var(--rust); }
+  .journey-map {
+    position: relative;
+    max-width: 1100px; margin: 0 auto;
+    aspect-ratio: 1100 / 500;
+    width: 100%;
+  }
+  .journey-map svg { width: 100%; height: 100%; overflow: visible; }
+  .journey-path {
+    fill: none; stroke: var(--gold); stroke-width: 2;
+    stroke-dasharray: 6 8; stroke-linecap: round;
+    stroke-dashoffset: 1400;
+  }
+  .journey-plane {
+    fill: var(--cream); transform-origin: center; transform-box: fill-box;
+  }
+  .journey-city { fill: var(--rust); }
+  .journey-city.dest { fill: var(--gold); }
+  .journey-city-ring {
+    fill: none; stroke: var(--gold); stroke-width: 1;
+    transform-origin: center; transform-box: fill-box;
+    animation: cityPulse 2s ease-out infinite;
+  }
+  @keyframes cityPulse {
+    0% { r: 8; opacity: 1; }
+    100% { r: 30; opacity: 0; }
+  }
+  .journey-city-label {
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    fill: var(--cream); font-size: 28px;
+  }
+  .journey-city-sub {
+    font-family: 'JetBrains Mono', monospace;
+    fill: rgba(241, 230, 207, 0.5);
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  }
+  .journey-distance {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) translateY(-100px);
+    text-align: center; pointer-events: none;
+  }
+  .journey-distance .num {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: clamp(3rem, 6vw, 5rem); line-height: 1;
+    color: var(--cream); letter-spacing: -0.03em;
+  }
+  .journey-distance .unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); margin-top: 0.4rem;
+  }
+
+  /* ===== REEL ===== */
+  .reel-wrap { height: 500vh; position: relative; background: var(--ink); }
+  .reel {
+    position: sticky; top: 0; height: 100vh; width: 100%;
+    overflow: hidden; display: flex; align-items: center;
+  }
+  .reel-track {
+    display: flex; height: 100%; align-items: center;
+    will-change: transform; padding: 0 5vw; gap: 5vw;
+    user-select: none;
+  }
+  .reel-progress {
+    position: absolute; top: 0; left: 0; height: 3px;
+    background: var(--gold); z-index: 10; transition: width 0.1s;
+  }
+  .reel-label {
+    position: absolute; top: 2rem; left: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3em;
+    color: var(--gold); z-index: 10;
+  }
+  .reel-counter {
+    position: absolute; top: 2rem; right: 3rem;
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    font-size: 1.2rem; color: var(--cream); z-index: 10;
+  }
+  .reel-counter .current {
+    color: var(--gold); font-size: 2rem;
+    display: inline-block; transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .reel-counter .current.flip { animation: flip 0.5s cubic-bezier(0.2, 0.9, 0.2, 1); }
+  @keyframes flip {
+    0% { transform: rotateX(0); }
+    50% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0); }
+  }
+  .reel-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(241, 230, 207, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(241, 230, 207, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none;
+  }
+  .reel-hint {
+    position: absolute; bottom: 2rem; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(241, 230, 207, 0.5); z-index: 10;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .reel-hint::before, .reel-hint::after { content: '─'; opacity: 0.6; }
+
+  .frame {
+    flex-shrink: 0; width: 75vw; height: 75vh;
+    background: var(--paper); position: relative; padding: 3rem;
+    display: grid; grid-template-rows: auto 1fr auto;
+    border: 1px solid rgba(26, 18, 11, 0.2);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(106, 52, 16, 0.04);
+  }
+  .frame::before, .frame::after {
+    content: '✦'; position: absolute;
+    font-size: 1.2rem; color: var(--gold-deep); opacity: 0.5;
+  }
+  .frame::before { top: 0.6rem; left: 0.8rem; }
+  .frame::after { bottom: 0.6rem; right: 0.8rem; }
+  .frame-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--ink); padding-bottom: 1.5rem; position: relative;
+  }
+  .frame-head::after {
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+    background: var(--gold); transform: translateY(3px); opacity: 0.4;
+  }
+  .frame-num { font-family: 'Fraunces', serif; font-size: clamp(4rem, 8vw, 8rem); font-weight: 300; line-height: 0.85; letter-spacing: -0.04em; }
+  .frame-num em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--rust); font-weight: 400; }
+  .frame-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-soft); text-align: right; }
+  .frame-tag .badge { display: inline-block; padding: 0.4em 0.8em; border: 1px solid var(--ink); border-radius: 100px; margin-bottom: 0.5rem; }
+  .frame-body { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: center; padding: 3rem 0; }
+  .frame-title { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(2.5rem, 5vw, 5rem); line-height: 1; letter-spacing: -0.02em; }
+  .frame-title small {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-soft); margin-top: 1rem; font-style: normal;
+  }
+  .frame-detail { font-family: 'Fraunces', serif; font-size: 1.1rem; line-height: 1.5; color: var(--ink-soft); }
+  .frame-detail strong { color: var(--ink); font-weight: 600; }
+  .frame-detail .name { font-family: 'Fraunces', serif; font-size: 2.5rem; font-weight: 300; letter-spacing: -0.02em; line-height: 1; color: var(--ink); display: block; margin-bottom: 0.3rem; }
+  .frame-detail .role { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--rust); font-size: 1.2rem; margin-bottom: 1.5rem; display: block; }
+  .frame-detail .stack { display: flex; gap: 0; }
+  .frame-detail .stack .name { font-size: 2rem; }
+  .frame-detail .stack > div { flex: 1; }
+  .frame-detail .stack > div + div { padding-left: 1.5rem; border-left: 1px solid rgba(26, 18, 11, 0.2); margin-left: 1.5rem; }
+  .frame-foot { display: flex; justify-content: space-between; align-items: end; border-top: 1px solid var(--ink); padding-top: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-soft); }
+  .frame-foot .key { color: var(--rust); }
+  .frame.dark { background: var(--ink); color: var(--cream); }
+  .frame.dark::before, .frame.dark::after { color: var(--gold); opacity: 0.7; }
+  .frame.dark .frame-head { border-bottom-color: var(--cream); }
+  .frame.dark .frame-foot { border-top-color: var(--cream); }
+  .frame.dark .frame-tag { color: rgba(241, 230, 207, 0.6); }
+  .frame.dark .frame-tag .badge { border-color: var(--cream); }
+  .frame.dark .frame-detail { color: rgba(241, 230, 207, 0.8); }
+  .frame.dark .frame-detail strong { color: var(--cream); }
+  .frame.dark .frame-detail .name { color: var(--cream); }
+  .frame.dark .frame-foot { color: rgba(241, 230, 207, 0.6); }
+  .esc-block { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem; }
+  .esc-item { padding: 1.5rem; background: rgba(241, 230, 207, 0.05); border-left: 2px solid var(--gold); }
+  .esc-item .when { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.7rem; display: block; }
+  .esc-item .what { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.4rem; line-height: 1.3; color: var(--cream); }
+
+  /* ===== KINETIC ===== */
+  .kinetic {
+    height: 100vh; background: var(--gold); color: var(--ink);
+    display: flex; align-items: center; overflow: hidden; position: relative;
+  }
+  .kinetic::before, .kinetic::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 14px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 14px, transparent 14px 28px);
+  }
+  .kinetic::before { top: 0; }
+  .kinetic::after { bottom: 0; }
+  .kinetic-track {
+    display: flex; gap: 4rem;
+    animation: scroll var(--k-duration, 18s) linear infinite;
+    white-space: nowrap;
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    font-size: clamp(5rem, 18vw, 19rem); line-height: 1; font-weight: 400;
+  }
+  .kinetic-track .row { display: flex; gap: 4rem; align-items: center; }
+  .kinetic-track .ast { display: inline-block; animation: spin 6s linear infinite; color: var(--rust); }
+
+  /* ===== STACK ===== */
+  .stack-intro { padding: 8rem 3rem 4rem; text-align: center; background: var(--cream); }
+  .stack-intro .label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rust); margin-bottom: 2rem; }
+  .stack-intro h2 { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(3rem, 8vw, 7rem); line-height: 1; letter-spacing: -0.03em; max-width: 1200px; margin: 0 auto; }
+  .stack-intro h2 em { color: var(--rust); }
+  .stack-wrap { padding: 0 3rem 6rem; background: var(--cream); }
+  .stack-card {
+    position: sticky; top: 8vh; height: 80vh;
+    background: var(--paper); border: 1px solid var(--ink);
+    margin-bottom: 4rem; padding: 4rem;
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 4rem; align-items: center;
+    box-shadow: 0 20px 50px rgba(26, 18, 11, 0.1);
+  }
+  .stack-card:nth-child(2) { background: var(--cream-deep); top: 10vh; }
+  .stack-card:nth-child(3) { background: var(--ink); color: var(--cream); top: 12vh; }
+  .stack-card:nth-child(3) .stack-num em { color: var(--gold); }
+  .stack-num { font-family: 'Fraunces', serif; font-size: clamp(8rem, 22vw, 22rem); font-weight: 300; line-height: 0.8; letter-spacing: -0.05em; }
+  .stack-num em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--rust); font-weight: 400; }
+  .stack-content .label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rust); margin-bottom: 1rem; }
+  .stack-card:nth-child(3) .stack-content .label { color: var(--gold); }
+  .stack-content h3 { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
+  .stack-content p { font-family: 'Fraunces', serif; font-size: 1.2rem; line-height: 1.55; max-width: 540px; }
+  .stack-content p strong { font-weight: 600; }
+  .stack-content p .wa { font-family: 'Fraunces', serif; font-weight: 600; color: var(--rust); border-bottom: 1px solid var(--rust); }
+  .stack-card:nth-child(3) .stack-content p .wa { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ===== LEDGER ===== */
+  .ledger { background: var(--ink); color: var(--cream); padding: 10rem 3rem; position: relative; overflow: hidden; }
+  .ledger-bg { position: absolute; top: 50%; right: -3rem; font-size: 38rem; color: rgba(200, 144, 48, 0.05); line-height: 1; transform: translateY(-50%); pointer-events: none; font-family: 'Fraunces', serif; font-weight: 300; animation: spin 30s linear infinite; transform-origin: center; }
+  .ledger-head { margin-bottom: 5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--cream); display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; position: relative; z-index: 2; }
+  .ledger-head h2 { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(3rem, 7vw, 6rem); line-height: 1; letter-spacing: -0.02em; }
+  .ledger-head .label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); }
+  .ledger-table { position: relative; z-index: 2; }
+  .ledger-row { display: grid; grid-template-columns: 80px 2fr 2fr 1.5fr; gap: 3rem; padding: 2rem 0; border-bottom: 1px solid rgba(241, 230, 207, 0.2); align-items: baseline; transition: padding-left 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), background 0.4s; }
+  .ledger-row:hover { padding-left: 2rem; background: rgba(241, 230, 207, 0.03); }
+  .ledger-row.head { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); padding-bottom: 1.5rem; }
+  .ledger-row.head:hover { padding-left: 0; background: transparent; }
+  .ledger-row .idx { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--gold); font-size: 1.6rem; }
+  .ledger-row .area { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 400; }
+  .ledger-row .contact { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.25rem; }
+  .ledger-row .when { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: rgba(241, 230, 207, 0.6); text-transform: uppercase; letter-spacing: 0.15em; }
+  .ledger-row .when.flag { color: var(--rust); font-weight: 500; }
+
+  /* ===== POSTCARD with 3D TILT ===== */
+  .postcard-section { background: var(--cream); padding: 10rem 3rem; position: relative; overflow: hidden; text-align: center; perspective: 1500px; }
+  .postcard-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--rust); margin-bottom: 1.5rem; }
+  .postcard-eyebrow::before { content: '— '; }
+  .postcard-eyebrow::after { content: ' —'; }
+  .postcard-title { font-family: 'Tangerine', cursive; font-size: clamp(4rem, 11vw, 10rem); line-height: 0.95; color: var(--rust); margin-bottom: 1rem; transform: rotate(-2deg); }
+  .postcard-sub { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(1.5rem, 3vw, 2.5rem); color: var(--ink); margin-bottom: 4rem; }
+  .postcard {
+    display: inline-grid; grid-template-columns: 1fr 1fr;
+    width: min(900px, 100%);
+    background: var(--paper); border: 1px solid var(--ink);
+    text-align: left; box-shadow: 0 30px 60px rgba(26, 18, 11, 0.18);
+    transform: rotate(-1deg); position: relative;
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .postcard::before { content: ''; position: absolute; left: 50%; top: 1rem; bottom: 1rem; width: 1px; background: repeating-linear-gradient(180deg, var(--ink) 0 4px, transparent 4px 8px); opacity: 0.4; }
+  .postcard-left { padding: 2.5rem; }
+  .postcard-left .greeting { font-family: 'Tangerine', cursive; font-size: 2.4rem; line-height: 1; color: var(--burnt); margin-bottom: 1.5rem; }
+  .postcard-left .body { font-family: 'Fraunces', serif; font-size: 1rem; line-height: 1.6; color: var(--ink-soft); }
+  .postcard-left .body em { font-family: 'Instrument Serif', serif; color: var(--rust); }
+  .postcard-left .signoff { font-family: 'Tangerine', cursive; font-size: 2.2rem; line-height: 1; color: var(--burnt); margin-top: 1.5rem; transform: rotate(-2deg); display: inline-block; }
+  .postcard-right { padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .postcard-stamp { align-self: flex-end; width: 90px; height: 110px; border: 2px solid var(--ink); background: var(--magnolia); transform: rotate(5deg); text-align: center; padding: 0.5rem 0.3rem; font-family: 'Fraunces', serif; }
+  .postcard-stamp .pm { font-family: 'Tangerine', cursive; font-size: 1.4rem; line-height: 1; color: var(--rust); }
+  .postcard-stamp .place { font-family: 'Fraunces', serif; font-weight: 700; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.2rem; }
+  .postcard-stamp .value { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.3rem; color: var(--ink); border-top: 1px solid var(--ink); padding-top: 0.2rem; margin-top: 0.3rem; line-height: 1; }
+  .postcard-address { font-family: 'Fraunces', serif; line-height: 1.6; color: var(--ink); }
+  .postcard-address .to { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 0.5rem; }
+  .postcard-address .name { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.4rem; }
+  /* SVG postmark — gets drawn in */
+  .postmark-svg {
+    position: absolute; bottom: 1rem; left: 1rem;
+    width: 90px; height: 90px;
+    transform: rotate(-12deg); opacity: 0.85;
+  }
+  .postmark-svg circle, .postmark-svg path, .postmark-svg line {
+    fill: none; stroke: var(--burnt); stroke-width: 1.5;
+    stroke-dasharray: 400; stroke-dashoffset: 400;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .postmark-svg.drawn circle, .postmark-svg.drawn path, .postmark-svg.drawn line { stroke-dashoffset: 0; }
+  .postmark-svg text { font-family: 'Fraunces', serif; fill: var(--burnt); font-weight: 700; font-size: 7px; letter-spacing: 0.5px; opacity: 0; transition: opacity 0.4s 1.2s; }
+  .postmark-svg text.date { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-size: 11px; letter-spacing: 0; }
+  .postmark-svg.drawn text { opacity: 1; }
+
+  /* ===== REACH ===== */
+  .reach { min-height: 100vh; background: var(--cream-deep); padding: 8rem 3rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; overflow: hidden; }
+  .reach-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--rust); margin-bottom: 3rem; }
+  .reach-eyebrow::before { content: '— '; }
+  .reach-eyebrow::after { content: ' —'; }
+  .reach-title { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(3rem, 9vw, 8.5rem); line-height: 1; letter-spacing: -0.025em; margin-bottom: 1rem; max-width: 1200px; }
+  .reach-title em { color: var(--rust); }
+  .reach-sub { font-family: 'Tangerine', cursive; color: var(--burnt); font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1; margin-bottom: 4rem; transform: rotate(-2deg); }
+  .reach-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 900px; width: 100%; }
+  .reach-card {
+    background: var(--paper); border: 1px solid var(--ink);
+    padding: 2.5rem; text-align: left; text-decoration: none;
+    color: var(--ink); position: relative; overflow: hidden;
+    will-change: transform;
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .reach-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--ink); transform: translateY(101%);
+    transition: transform 0.6s cubic-bezier(0.7, 0, 0.2, 1); z-index: 0;
+  }
+  .reach-card:hover::before { transform: translateY(0); }
+  .reach-card:hover { color: var(--cream); }
+  .reach-card:hover .reach-card-label { color: var(--gold); }
+  .reach-card:hover .reach-card-arrow { color: var(--gold); }
+  .reach-card > * { position: relative; z-index: 1; }
+  .reach-card-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 1rem; display: block; transition: color 0.4s; }
+  .reach-card-value { font-family: 'Fraunces', serif; font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 300; letter-spacing: -0.02em; line-height: 1; display: block; margin-bottom: 1.5rem; }
+  .reach-card-arrow { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1rem; color: var(--rust); display: flex; align-items: center; gap: 0.5rem; transition: gap 0.3s, color 0.4s; }
+  .reach-card:hover .reach-card-arrow { gap: 1rem; }
+
+  /* ===== FOOTER ===== */
+  footer { padding: 8rem 3rem 3rem; background: var(--ink); color: var(--cream); text-align: center; position: relative; overflow: hidden; }
+  .footer-pre { font-family: 'Tangerine', cursive; font-size: clamp(3rem, 8vw, 6rem); color: var(--gold); margin-bottom: -1rem; transform: rotate(-3deg); line-height: 1; }
+  .footer-title { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(6rem, 22vw, 26rem); line-height: 0.85; letter-spacing: -0.04em; margin-bottom: 3rem; }
+  .footer-title em { color: var(--rust); }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(241, 230, 207, 0.5); margin-top: 3rem; display: flex; justify-content: space-between; padding-top: 2rem; border-top: 1px solid rgba(241, 230, 207, 0.2); }
+
+  /* ===== MINI-GAME: PACK FRAZER'S SUITCASE ===== */
+  .game-section {
+    background: var(--cream-deep);
+    padding: 8rem 3rem;
+    position: relative;
+    overflow: hidden;
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  .game-eyebrow {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 1.5rem;
+  }
+  .game-eyebrow::before { content: '— '; }
+  .game-eyebrow::after { content: ' —'; }
+  .game-title {
+    text-align: center;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .game-title em { color: var(--rust); }
+  .game-sub {
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 600px;
+    margin: 0 auto 4rem;
+    line-height: 1.5;
+  }
+  .game-board {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .game-items {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 2rem;
+    position: relative;
+  }
+  .game-items::before {
+    content: 'Available items — drag what Frazer needs';
+    position: absolute;
+    top: -0.7rem;
+    left: 1.5rem;
+    background: var(--cream-deep);
+    padding: 0 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+  }
+  .item {
+    background: var(--cream);
+    border: 1px solid var(--ink);
+    padding: 1rem 0.6rem;
+    text-align: center;
+    cursor: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.3s;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Fraunces', serif;
+    position: relative;
+  }
+  .item:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .item.dragging {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  .item.packed { opacity: 0.2; pointer-events: none; }
+  .item .emoji { font-size: 2rem; line-height: 1; display: block; margin-bottom: 0.4rem; }
+  .item .name {
+    font-size: 0.85rem;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    line-height: 1.1;
+  }
+  .item-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 5000;
+    background: var(--cream);
+    border: 2px solid var(--rust);
+    padding: 0.8rem 0.6rem;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    box-shadow: 6px 6px 0 var(--ink);
+    transform: translate(-50%, -50%) rotate(-3deg);
+    opacity: 0;
+    transition: opacity 0.1s;
+    min-width: 80px;
+  }
+  .item-ghost.active { opacity: 1; }
+
+  .suitcase {
+    background: var(--bourbon);
+    border: 3px solid var(--ink);
+    border-radius: 12px 12px 4px 4px;
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    min-height: 380px;
+    background-image:
+      linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 8%, transparent 92%, rgba(0,0,0,0.15) 100%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 2px, transparent 2px 14px);
+    color: var(--cream);
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.3s;
+  }
+  .suitcase.over {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(181, 58, 26, 0.4);
+  }
+  .suitcase::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: 30%; right: 30%; height: 24px;
+    background: var(--ink);
+    border-radius: 12px 12px 0 0;
+    border: 3px solid var(--ink);
+  }
+  .suitcase::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 38%; right: 38%; height: 14px;
+    border: 2px solid var(--cream);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+  }
+  .suitcase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 0.6rem;
+    margin-top: 0.6rem;
+  }
+  .suitcase-title {
+    font-family: 'Tangerine', cursive;
+    font-size: 2.2rem;
+    color: var(--cream);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    transform: rotate(-2deg);
+  }
+  .suitcase-score {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    border-top: 1px dashed rgba(241, 230, 207, 0.3);
+    border-bottom: 1px dashed rgba(241, 230, 207, 0.3);
+  }
+  .score-cell { text-align: center; }
+  .score-cell .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(241, 230, 207, 0.6);
+    margin-bottom: 0.3rem;
+  }
+  .score-cell .val {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--cream);
+  }
+  .score-cell .val.good { color: var(--gold); }
+  .score-cell .val.bad { color: var(--rust); }
+  .suitcase-packed {
+    min-height: 110px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 4px;
+    align-content: flex-start;
+  }
+  .packed-chip {
+    background: var(--cream);
+    color: var(--ink);
+    padding: 0.4rem 0.7rem;
+    border-radius: 100px;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    animation: chipIn 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .packed-chip.bad { background: var(--rust); color: var(--cream); }
+  @keyframes chipIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+  }
+  .suitcase-feedback {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--cream);
+    min-height: 1.5rem;
+    transition: opacity 0.3s;
+  }
+  .suitcase-feedback.bad { color: var(--rust); font-weight: 600; }
+  .suitcase-feedback.good { color: var(--gold); }
+  .suitcase-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  .suitcase-reset {
+    background: transparent;
+    border: 1px solid var(--cream);
+    color: var(--cream);
+    padding: 0.5rem 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s, color 0.3s;
+  }
+  .suitcase-reset:hover { background: var(--cream); color: var(--bourbon); }
+
+  /* ===== SECRET OVERLAYS ===== */
+  /* Neon Memphis sign */
+  .neon-overlay {
+    position: fixed; inset: 0; z-index: 9400;
+    pointer-events: none;
+    background: rgba(26, 18, 11, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .neon-overlay.active { opacity: 1; }
+  .neon-sign {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(4rem, 16vw, 16rem);
+    line-height: 1;
+    color: var(--rust);
+    text-shadow:
+      0 0 8px var(--rust),
+      0 0 20px var(--rust),
+      0 0 40px rgba(181, 58, 26, 0.8),
+      0 0 80px rgba(181, 58, 26, 0.4);
+    letter-spacing: 0.04em;
+    transform: scale(0.3);
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .neon-overlay.active .neon-sign { transform: scale(1); }
+  .neon-sign span { display: inline-block; }
+  .neon-sign span.flicker { animation: flicker 0.15s infinite; }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Sun Records yellow takeover */
+  .sun-overlay {
+    position: fixed; inset: 0; z-index: 9300;
+    background: var(--gold);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .sun-overlay.active { opacity: 1; }
+  .sun-overlay::before, .sun-overlay::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 30px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 18px, transparent 18px 36px);
+  }
+  .sun-overlay::before { top: 0; }
+  .sun-overlay::after { bottom: 0; }
+  .sun-mark {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(8rem, 30vw, 30rem);
+    line-height: 1;
+    color: var(--rust);
+    letter-spacing: -0.05em;
+    transform: scale(0.5) rotate(-5deg);
+    transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .sun-overlay.active .sun-mark { transform: scale(1) rotate(0deg); }
+
+  /* Orbiting vinyl */
+  .orbit-vinyl {
+    position: fixed;
+    width: 120px; height: 120px;
+    pointer-events: none;
+    z-index: 9200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    will-change: transform;
+  }
+  .orbit-vinyl.active { opacity: 1; }
+  .orbit-vinyl svg { width: 100%; height: 100%; animation: spin 1.5s linear infinite; }
+
+  /* Confetti / rice */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    pointer-events: none;
+    z-index: 9100;
+    border-radius: 50%;
+    will-change: transform;
+  }
+
+  /* Shatter pieces */
+  .shatter-piece {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9000;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--cream);
+    will-change: transform;
+  }
+
+  /* ===== EASTER EGG (KONAMI) ===== */
+  .konami-overlay {
+    position: fixed; inset: 0; z-index: 9500;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(circle at center, rgba(181, 58, 26, 0.4) 0%, transparent 70%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .konami-overlay.active { opacity: 1; }
+  .konami-text {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(5rem, 15vw, 14rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(200, 144, 48, 0.6);
+    transform: scale(0.5);
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+  .konami-overlay.active .konami-text { transform: scale(1) rotate(-5deg); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    body { cursor: auto; }
+    .cursor, .cursor-trail, .rail, .now-playing, #particles { display: none; }
+    nav { padding: 1rem 1.5rem; }
+    .nav-time { gap: 0.8rem; font-size: 0.55rem; }
+    .hero-stamp { width: 100px; height: 120px; top: 5rem; right: 1.5rem; }
+    .hero-stamp .stamp-mark { font-size: 1.5rem; }
+    .hero-stamp .stamp-val { font-size: 1.2rem; }
+    .hero-vinyl { width: 120px; height: 120px; bottom: 7rem; left: 1.5rem; }
+    .hero-foot { padding: 0 1.5rem; gap: 1rem; flex-wrap: wrap; }
+    .intro, .stack-wrap, .stack-intro, .ledger, .reach, footer, .postcard-section, .journey { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .intro-meta { left: 1.5rem; top: 5rem; }
+    .intro-byline { right: 1.5rem; bottom: 2rem; font-size: 1.8rem; }
+    .frame { width: 90vw; height: 80vh; padding: 1.5rem; }
+    .frame-body { grid-template-columns: 1fr; gap: 1.5rem; padding: 1.5rem 0; }
+    .frame-detail .stack { flex-direction: column; }
+    .frame-detail .stack > div + div { padding-left: 0; margin-left: 0; padding-top: 1rem; margin-top: 1rem; border-left: none; border-top: 1px solid rgba(26, 18, 11, 0.2); }
+    .esc-block { grid-template-columns: 1fr; gap: 1rem; }
+    .stack-card { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem; height: auto; min-height: 70vh; }
+    .stack-num { font-size: 8rem; }
+    .ledger-row { grid-template-columns: 30px 1fr; gap: 0.5rem 1rem; }
+    .ledger-row .contact, .ledger-row .when { grid-column: 2; }
+    .ledger-row .area { font-size: 1.2rem; }
+    .ledger-row.head { display: none; }
+    .postcard { grid-template-columns: 1fr; transform: none; }
+    .postcard::before { display: none; }
+    .postcard-right { border-top: 1px dashed var(--ink); }
+    .reach-cards { grid-template-columns: 1fr; }
+    .footer-meta { flex-direction: column; gap: 0.5rem; }
+    .game-section { padding: 4rem 1.5rem; }
+    .game-board { grid-template-columns: 1fr; gap: 2rem; }
+    .item-grid { grid-template-columns: repeat(2, 1fr); }
+    .item .emoji { font-size: 1.6rem; }
+    .item .name { font-size: 0.75rem; }
+    .suitcase { padding: 2rem 1.2rem 1.2rem; min-height: 320px; }
+    .suitcase-score { padding: 0.8rem 0; }
+    .score-cell .val { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body class="locked">
+
+<!-- ===== UNLOCK SCREEN ===== -->
+<div class="unlock" id="unlock">
+  <div class="unlock-bunting"></div>
+
+  <div class="unlock-eyebrow">Authorised Personnel Only</div>
+  <h1 class="unlock-title">Find the football.</h1>
+  <p class="unlock-sub">Three cups. One football. <em>Eyes on it.</em></p>
+  <p class="unlock-instructions" id="unlockInstr"><strong>Watch closely</strong> — the cups will shuffle in a moment.</p>
+
+  <div class="shell-game" id="shellGame">
+    <div class="shell-floor"></div>
+
+    <!-- Football SVG (American football) -->
+    <div class="football" id="football">
+      <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="30" rx="48" ry="24" fill="#7a3a1a" stroke="#3a1a08" stroke-width="2"/>
+        <ellipse cx="50" cy="30" rx="44" ry="20" fill="none" stroke="#5a2a14" stroke-width="0.8"/>
+        <!-- Laces -->
+        <line x1="38" y1="30" x2="62" y2="30" stroke="#f1e6cf" stroke-width="2" stroke-linecap="round"/>
+        <line x1="42" y1="26" x2="42" y2="34" stroke="#f1e6cf" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="47" y1="26" x2="47" y2="34" stroke="#f1e6cf" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="52" y1="26" x2="52" y2="34" stroke="#f1e6cf" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="57" y1="26" x2="57" y2="34" stroke="#f1e6cf" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Highlights for shape -->
+        <ellipse cx="35" cy="22" rx="10" ry="3" fill="#9a4a22" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <!-- Cup 0 -->
+    <div class="cup" id="cup0" data-pos="0">
+      <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Red solo cup: trapezoid + rim + ellipse top -->
+        <path d="M 18 8 L 82 8 L 90 130 L 10 130 Z" fill="#cc2333" stroke="#7a1018" stroke-width="1.5"/>
+        <!-- Rim band (slightly lighter) -->
+        <path d="M 18 8 L 82 8 L 84 24 L 16 24 Z" fill="#e02838" stroke="#7a1018" stroke-width="1"/>
+        <!-- Top opening (dark ellipse showing inside) -->
+        <ellipse cx="50" cy="8" rx="32" ry="4" fill="#3a0810" stroke="#7a1018" stroke-width="1"/>
+        <!-- Inside highlight -->
+        <path d="M 25 14 L 75 14 L 76 22 L 24 22 Z" fill="#9a1820" opacity="0.6"/>
+        <!-- Side gloss -->
+        <path d="M 24 28 L 28 124 L 32 124 L 28 28 Z" fill="#f08080" opacity="0.3"/>
+        <!-- Base -->
+        <ellipse cx="50" cy="130" rx="40" ry="4" fill="#5a0810"/>
+      </svg>
+    </div>
+
+    <!-- Cup 1 -->
+    <div class="cup" id="cup1" data-pos="1">
+      <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 18 8 L 82 8 L 90 130 L 10 130 Z" fill="#cc2333" stroke="#7a1018" stroke-width="1.5"/>
+        <path d="M 18 8 L 82 8 L 84 24 L 16 24 Z" fill="#e02838" stroke="#7a1018" stroke-width="1"/>
+        <ellipse cx="50" cy="8" rx="32" ry="4" fill="#3a0810" stroke="#7a1018" stroke-width="1"/>
+        <path d="M 25 14 L 75 14 L 76 22 L 24 22 Z" fill="#9a1820" opacity="0.6"/>
+        <path d="M 24 28 L 28 124 L 32 124 L 28 28 Z" fill="#f08080" opacity="0.3"/>
+        <ellipse cx="50" cy="130" rx="40" ry="4" fill="#5a0810"/>
+      </svg>
+    </div>
+
+    <!-- Cup 2 -->
+    <div class="cup" id="cup2" data-pos="2">
+      <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 18 8 L 82 8 L 90 130 L 10 130 Z" fill="#cc2333" stroke="#7a1018" stroke-width="1.5"/>
+        <path d="M 18 8 L 82 8 L 84 24 L 16 24 Z" fill="#e02838" stroke="#7a1018" stroke-width="1"/>
+        <ellipse cx="50" cy="8" rx="32" ry="4" fill="#3a0810" stroke="#7a1018" stroke-width="1"/>
+        <path d="M 25 14 L 75 14 L 76 22 L 24 22 Z" fill="#9a1820" opacity="0.6"/>
+        <path d="M 24 28 L 28 124 L 32 124 L 28 28 Z" fill="#f08080" opacity="0.3"/>
+        <ellipse cx="50" cy="130" rx="40" ry="4" fill="#5a0810"/>
+      </svg>
+    </div>
+
+    <!-- Result overlay -->
+    <div class="unlock-result" id="unlockResult">
+      <div class="icon" id="resultIcon"></div>
+      <h3 id="resultTitle"></h3>
+      <p id="resultMsg"></p>
+      <div class="unlock-controls" id="resultControls"></div>
+    </div>
+  </div>
+
+  <div class="unlock-controls">
+    <button class="unlock-btn" id="unlockStart">Start the game</button>
+    <button class="unlock-btn ghost" id="unlockSkip">Skip — I trust you</button>
+  </div>
+
+  <div class="unlock-stat">Attempts: <span class="val" id="unlockAttempts">0</span> · Wins: <span class="val" id="unlockWins">0</span></div>
+</div>
+
+<!-- ===== END UNLOCK ===== -->
+
+<canvas id="particles"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- KONAMI EASTER EGG -->
+<div class="konami-overlay" id="konami">
+  <div class="konami-text">that's the way<br>uh-huh uh-huh<br>I like it ✦</div>
+</div>
+
+<!-- SECRETS: NEON, SUN, ORBIT VINYL -->
+<div class="neon-overlay" id="neonOverlay">
+  <div class="neon-sign" id="neonSign"></div>
+</div>
+<div class="sun-overlay" id="sunOverlay">
+  <div class="sun-mark">SUN</div>
+</div>
+<div class="orbit-vinyl" id="orbitVinyl">
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="98" fill="#1a120b" />
+    <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(241,230,207,0.15)" stroke-width="0.6" />
+    <circle cx="100" cy="100" r="74" fill="none" stroke="rgba(241,230,207,0.15)" stroke-width="0.6" />
+    <circle cx="100" cy="100" r="58" fill="none" stroke="rgba(241,230,207,0.15)" stroke-width="0.6" />
+    <circle cx="100" cy="100" r="35" fill="#b53a1a" />
+    <circle cx="100" cy="100" r="2" fill="#1a120b" />
+  </svg>
+</div>
+<div class="now-playing">
+  <div class="np-icon"></div>
+  <div class="np-text">
+    <span class="np-label">Now Playing · Side A</span>
+    <span class="np-title" id="npTitle">Memphis Bound — F. Innes</span>
+  </div>
+</div>
+
+<!-- SIDE RAIL -->
+<div class="rail" id="rail">
+  <a href="#hero" class="rail-item active" data-section="hero"><span class="num">i</span><span class="bar"></span><span class="label">Cover</span></a>
+  <a href="#intro" class="rail-item" data-section="intro"><span class="num">ii</span><span class="bar"></span><span class="label">Premise</span></a>
+  <a href="#journey" class="rail-item" data-section="journey"><span class="num">iii</span><span class="bar"></span><span class="label">Journey</span></a>
+  <a href="#reel" class="rail-item" data-section="reel"><span class="num">iv</span><span class="bar"></span><span class="label">Reel</span></a>
+  <a href="#stack" class="rail-item" data-section="stack"><span class="num">v</span><span class="bar"></span><span class="label">Routing</span></a>
+  <a href="#ledger" class="rail-item" data-section="ledger"><span class="num">vi</span><span class="bar"></span><span class="label">Ledger</span></a>
+  <a href="#postcard" class="rail-item" data-section="postcard"><span class="num">vii</span><span class="bar"></span><span class="label">Postcard</span></a>
+  <a href="#game" class="rail-item" data-section="game"><span class="num">viii</span><span class="bar"></span><span class="label">Game</span></a>
+  <a href="#reach" class="rail-item" data-section="reach"><span class="num">ix</span><span class="bar"></span><span class="label">Reach</span></a>
+</div>
+
+<!-- LOADER -->
+<div class="loader">
+  <div class="loader-ticker"><span class="tt">SETTLEMENTS ✦ PAYROLL ✦ CLIENT PLATFORM ✦ MEMPHIS TN ✦ HANDOVER VOL I ✦ FRAZER INNES ✦ MAY 2026 ✦ SETTLEMENTS ✦ PAYROLL ✦ CLIENT PLATFORM ✦ MEMPHIS TN ✦</span></div>
+  <div class="loader-ticker bottom"><span class="tt">WED 20 MAY → WED 27 MAY ✦ BACK THURSDAY 28 MAY ✦ REACHABLE FOR THE RIGHT REASONS ✦ HOLD THE FORT ✦ WED 20 MAY → WED 27 MAY ✦ BACK THURSDAY 28 MAY ✦</span></div>
+
+  <div class="loader-pre">greetings from</div>
+  <div class="loader-text">
+    <span>The</span><span>Hand</span><span class="loader-num">·</span><span>Over</span>
+  </div>
+  <div class="loader-wave">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </div>
+  <div class="loader-terminal">
+    <div class="line"><span class="check">›</span>Initialising handover protocol... <span class="ok">[ ok ]</span></div>
+    <div class="line"><span class="check">›</span>Loading delegates from /settlements... <span class="ok">[ ok ]</span></div>
+    <div class="line"><span class="check">›</span>Verifying escalation routes... <span class="ok">[ ok ]</span></div>
+    <div class="line"><span class="check">›</span>Polishing dress shoes... <span class="ok">[ ok ]</span></div>
+    <div class="line"><span class="check">›</span>Booking flight LHR → MEM... <span class="ok">[ ok ]</span></div>
+    <div class="line"><span class="check">›</span>Ready. <span class="ok">[ done ]</span></div>
+  </div>
+  <div class="loader-meta">Frazer Innes · Memphis Bound · 2026</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-mark">Frazer Innes / Settlements</div>
+  <div class="nav-time">
+    <span class="clock"><span class="dot"></span><span id="navTime">--:--</span> · LDN</span>
+    <span class="clock"><span id="navTimeMem">--:--</span> · MEM</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-wrap">
+  <section class="hero" id="hero">
+    <svg class="hero-sunburst" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="rayFade">
+          <stop offset="0%" stop-color="var(--bourbon)" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="var(--bourbon)" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <g class="rays"><circle cx="100" cy="100" r="100" fill="url(#rayFade)" /></g>
+      <g class="rays" fill="var(--bourbon)" opacity="0.12">
+        <g style="transform-origin: 100px 100px;" id="sunRaysOuter"></g>
+      </g>
+      <g class="rays-inner" fill="var(--rust)" opacity="0.08">
+        <g style="transform-origin: 100px 100px;" id="sunRaysInner"></g>
+      </g>
+    </svg>
+
+    <div class="hero-bg-num" id="heroBgNum">26</div>
+
+    <div class="hero-stamp" id="heroStamp">
+      <div class="stamp-mark">Air Mail</div>
+      <div class="stamp-place">Memphis</div>
+      <div class="stamp-state">Tennessee</div>
+      <div class="stamp-val">26¢</div>
+    </div>
+
+    <div class="hero-vinyl" id="heroVinyl">
+      <svg class="disc" id="vinylDisc" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="98" fill="var(--ink)" />
+        <circle cx="100" cy="100" r="94" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="0.5" />
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="0.5" />
+        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="0.5" />
+        <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="0.5" />
+        <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="0.5" />
+        <circle cx="100" cy="100" r="35" fill="var(--rust)" />
+        <circle cx="100" cy="100" r="34" fill="none" stroke="var(--gold)" stroke-width="0.4" />
+        <text x="100" y="92" font-family="Fraunces, serif" font-weight="900" font-size="6" fill="var(--cream)" text-anchor="middle" letter-spacing="1">SUN</text>
+        <text x="100" y="100" font-family="Instrument Serif, serif" font-style="italic" font-size="5" fill="var(--cream)" text-anchor="middle">handover</text>
+        <text x="100" y="108" font-family="JetBrains Mono, monospace" font-size="3" fill="var(--gold)" text-anchor="middle" letter-spacing="0.5">SIDE A · 2026</text>
+        <circle cx="100" cy="100" r="2" fill="var(--ink)" />
+      </svg>
+      <div class="hero-vinyl-label">Now playing · Side A</div>
+    </div>
+
+    <div class="hero-inner" id="heroInner">
+      <div class="hero-pretitle">be back soon —</div>
+      <h1 class="hero-title">
+        <span class="line"><span class="scrambled" data-text="A brief,">A brief,</span></span>
+        <span class="line"><em><span class="scrambled" data-text="orderly">orderly</span></em></span>
+        <span class="line"><span class="scrambled" data-text="absence.">absence.</span></span>
+      </h1>
+      <div class="hero-eyebrow">Out of office · <span>Wed 20 May → Wed 27 May (incl.)</span> · Back Thu 28 May</div>
+    </div>
+
+    <div class="hero-foot">
+      <span>Issued · Head of Settlements</span>
+      <span class="scroll">Scroll to begin</span>
+      <span>Memphis · TN</span>
+    </div>
+  </section>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track" id="marqueeTrack">
+    <div class="row">
+      <span>Settlements</span><span class="dot">✦</span>
+      <span>Payroll</span><span class="dot">✦</span>
+      <span>Client Platform</span><span class="dot">✦</span>
+      <span class="note">♪</span><span>Memphis Bound</span><span class="note">♪</span>
+      <span class="dot">✦</span>
+      <span>Back Thursday</span><span class="dot">✦</span>
+    </div>
+    <div class="row">
+      <span>Settlements</span><span class="dot">✦</span>
+      <span>Payroll</span><span class="dot">✦</span>
+      <span>Client Platform</span><span class="dot">✦</span>
+      <span class="note">♪</span><span>Memphis Bound</span><span class="note">♪</span>
+      <span class="dot">✦</span>
+      <span>Back Thursday</span><span class="dot">✦</span>
+    </div>
+  </div>
+</div>
+
+<!-- INTRO -->
+<section class="intro" id="intro">
+  <div class="intro-meta">The whole picture</div>
+  <p class="intro-text" id="introText">
+    <span class="word">Three</span><span class="word">jobs.</span>
+    <span class="word">Two</span><span class="word">people.</span>
+    <span class="word">One</span><span class="word">wedding</span>
+    <span class="word"><span class="script">down south.</span></span>
+    <span class="word">If</span><span class="word">it's</span>
+    <span class="word"><em>truly</em></span><span class="word">urgent,</span>
+    <span class="word">you</span><span class="word">know</span>
+    <span class="word">where</span><span class="word">to</span>
+    <span class="word">find</span><span class="word">me.</span>
+  </p>
+  <div class="intro-byline">yours, Frazer<small>One page, one read, one trip</small></div>
+</section>
+
+<!-- JOURNEY MAP -->
+<section class="journey" id="journey">
+  <div class="journey-head">
+    <div class="label">Travel · Itinerary</div>
+    <h2>4,394 miles<br>between us<em>.</em></h2>
+  </div>
+
+  <div class="journey-map">
+    <svg viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background stars / dots -->
+      <g fill="var(--gold)" opacity="0.15">
+        <circle cx="120" cy="80" r="1" />
+        <circle cx="280" cy="160" r="1.5" />
+        <circle cx="450" cy="60" r="1" />
+        <circle cx="620" cy="180" r="1" />
+        <circle cx="780" cy="100" r="1.5" />
+        <circle cx="940" cy="200" r="1" />
+        <circle cx="200" cy="400" r="1" />
+        <circle cx="500" cy="440" r="1.5" />
+        <circle cx="850" cy="380" r="1" />
+        <circle cx="1020" cy="420" r="1" />
+      </g>
+
+      <!-- Coastline-ish curves (decorative) -->
+      <path d="M 50 280 Q 200 240 350 270 Q 450 290 500 260" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="1" stroke-dasharray="2 4"/>
+      <path d="M 600 290 Q 750 320 900 280 Q 1000 260 1050 280" fill="none" stroke="rgba(241,230,207,0.08)" stroke-width="1" stroke-dasharray="2 4"/>
+
+      <!-- Flight path -->
+      <path id="flightPath" class="journey-path" d="M 850 200 Q 600 80 350 280" />
+
+      <!-- LONDON (right side, since we're flying west) -->
+      <g transform="translate(850, 200)">
+        <circle class="journey-city-ring" cx="0" cy="0" r="8" />
+        <circle class="journey-city" cx="0" cy="0" cr="8" r="8" />
+        <text class="journey-city-label" x="20" y="6">London</text>
+        <text class="journey-city-sub" x="20" y="28">LHR · ORIGIN</text>
+      </g>
+
+      <!-- MEMPHIS (left side) -->
+      <g transform="translate(350, 280)">
+        <circle class="journey-city-ring" cx="0" cy="0" r="8" />
+        <circle class="journey-city dest" cx="0" cy="0" cr="8" r="8" />
+        <text class="journey-city-label" x="-150" y="6">Memphis</text>
+        <text class="journey-city-sub" x="-150" y="28">MEM · DESTINATION</text>
+      </g>
+
+      <!-- Plane (will be animated along path) -->
+      <g id="planeGroup">
+        <g class="journey-plane" transform="translate(-12, -12)">
+          <path d="M 0 12 L 12 0 L 18 0 L 14 8 L 24 8 L 28 4 L 30 4 L 28 10 L 24 12 L 28 14 L 30 20 L 28 20 L 24 16 L 14 16 L 18 24 L 12 24 Z" />
+        </g>
+      </g>
+    </svg>
+
+    <div class="journey-distance">
+      <div class="num">8 days</div>
+      <div class="unit">there & back</div>
+    </div>
+  </div>
+</section>
+
+<!-- REEL -->
+<div class="reel-wrap" id="reel">
+  <div class="reel">
+    <div class="reel-grid"></div>
+    <div class="reel-progress" id="reelProgress"></div>
+    <div class="reel-label">Responsibilities · Side A</div>
+    <div class="reel-counter"><span class="current" id="reelCurrent">01</span> <span style="opacity:0.5">/ 04</span></div>
+    <div class="reel-hint">Scroll or drag to advance</div>
+    <div class="reel-track" id="reelTrack">
+
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">0<em>1</em></div>
+          <div class="frame-tag"><div class="badge">Inter-departmental</div><br />Contact · Escalation</div>
+        </div>
+        <div class="frame-body">
+          <div><h3 class="frame-title">Daily<br>Settlements<small>Holding the line</small></h3></div>
+          <div class="frame-detail">
+            <span class="name">Jono</span>
+            <span class="role">Chief Operating Officer</span>
+            <p>Point of contact for any <strong>cross-departmental queries, issues, or escalations</strong> relating to daily settlements work.</p>
+          </div>
+        </div>
+        <div class="frame-foot"><span>Frame 01 / 04</span><span class="key">Treat as Frazer</span><span>Continue →</span></div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">0<em>2</em></div>
+          <div class="frame-tag"><div class="badge">Time-sensitive</div><br />Running this week</div>
+        </div>
+        <div class="frame-body">
+          <div><h3 class="frame-title">Payroll<small>Douglas Knight</small></h3></div>
+          <div class="frame-detail">
+            <div class="stack">
+              <div><span class="name">Talia</span><span class="role">Trained & ready</span><p>Fully briefed. Owning this week's run jointly.</p></div>
+              <div><span class="name">Jono</span><span class="role">Trained & ready</span><p>Two sets of eyes on every step.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-foot"><span>Frame 02 / 04</span><span class="key">Belt, braces, second belt</span><span>Continue →</span></div>
+      </div>
+
+      <div class="frame dark">
+        <div class="frame-head">
+          <div class="frame-num">0<em>2</em><span style="font-size: 0.4em; opacity: 0.5">.b</span></div>
+          <div class="frame-tag"><div class="badge">Escalation</div><br />When to reach me</div>
+        </div>
+        <div class="frame-body">
+          <div><h3 class="frame-title">Escalation<br>Protocol<small>Use the privilege wisely</small></h3></div>
+          <div class="frame-detail">
+            <div class="esc-block">
+              <div class="esc-item"><span class="when">Non-urgent</span><div class="what">Anything that can wait — I will address on my return.</div></div>
+              <div class="esc-item"><span class="when">Tech / Urgent</span><div class="what">Edge cases Talia & Jono cannot resolve — I am reachable.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-foot"><span>Frame 02b / 04</span><span class="key">Reachable for the right reasons</span><span>Continue →</span></div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">0<em>3</em></div>
+          <div class="frame-tag"><div class="badge">Soft launch</div><br />Feedback · Access · Bugs</div>
+        </div>
+        <div class="frame-body">
+          <div><h3 class="frame-title">Client<br>Platform<small>Routing rules ahead</small></h3></div>
+          <div class="frame-detail">
+            <p style="font-size: 1.4rem; font-family: 'Instrument Serif', serif; font-style: italic; line-height: 1.3;">Feedback flows one way. Emergencies flow another. Please do not mix the two.</p>
+            <p style="margin-top: 1.5rem; color: var(--ink-soft); font-size: 0.95rem;">Three routes follow. Pick the right one for the moment you're in.</p>
+          </div>
+        </div>
+        <div class="frame-foot"><span>Frame 04 / 04</span><span class="key">Routing follows ↓</span><span>Continue ↓</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KINETIC -->
+<div class="kinetic">
+  <div class="kinetic-track" id="kineticTrack">
+    <div class="row"><span>Three Routes</span><span class="ast">✦</span><span>One Inbox</span><span class="ast">✦</span><span>No Confusion</span><span class="ast">✦</span></div>
+    <div class="row"><span>Three Routes</span><span class="ast">✦</span><span>One Inbox</span><span class="ast">✦</span><span>No Confusion</span><span class="ast">✦</span></div>
+  </div>
+</div>
+
+<!-- STACK -->
+<div class="stack-intro" id="stack">
+  <div class="label">Client Platform · Routing</div>
+  <h2>Three ways<br>in. Pick <em>wisely.</em></h2>
+</div>
+<div class="stack-wrap">
+  <div class="stack-card">
+    <div class="stack-num">0<em>i</em></div>
+    <div class="stack-content">
+      <div class="label">Route One · Preferred</div>
+      <h3>General feedback —<br>in-platform.</h3>
+      <p>Ask clients to submit feedback via the <strong>feedback section of the platform itself</strong>. It lands where we want it. Frictionless, traceable, exactly where we'll review it.</p>
+    </div>
+  </div>
+  <div class="stack-card">
+    <div class="stack-num">0<em>ii</em></div>
+    <div class="stack-content">
+      <div class="label">Route Two · Spreadsheet</div>
+      <h3>Feedback via a<br>Portfolio Manager.</h3>
+      <p>If feedback comes via a PM instead, add it to the <strong>feedback spreadsheet</strong>. Path is pinned in the <span class="wa">Settlements Notifications</span> WhatsApp group. Don't let it die in a DM.</p>
+    </div>
+  </div>
+  <div class="stack-card">
+    <div class="stack-num">0<em>iii</em></div>
+    <div class="stack-content">
+      <div class="label">Route Three · Urgent</div>
+      <h3>Account, data,<br>or a real bug.</h3>
+      <p><strong>Account access problems</strong>, <strong>data issues</strong>, or <strong>urgent technical support / bug fixes</strong> — come straight to me. My contact details are at the end. I will be reachable.</p>
+    </div>
+  </div>
+</div>
+
+<!-- LEDGER -->
+<section class="ledger" id="ledger">
+  <div class="ledger-bg">✦</div>
+  <div class="ledger-head">
+    <div><div class="label">Quick Reference · Pin this</div><h2>The Ledger.</h2></div>
+    <div class="label">04 / Closing</div>
+  </div>
+  <div class="ledger-table">
+    <div class="ledger-row head"><div>No.</div><div>Area</div><div>Primary Contact</div><div>Reach Me When</div></div>
+    <div class="ledger-row"><div class="idx">i</div><div class="area">Daily settlements</div><div class="contact">Jono · COO</div><div class="when">—</div></div>
+    <div class="ledger-row"><div class="idx">ii</div><div class="area">Payroll</div><div class="contact">Talia & Jono</div><div class="when flag">Tech / Edge cases</div></div>
+    <div class="ledger-row"><div class="idx">iii</div><div class="area">Platform — feedback</div><div class="contact">In-platform · Spreadsheet</div><div class="when">—</div></div>
+    <div class="ledger-row"><div class="idx">iv</div><div class="area">Platform — access, data, bugs</div><div class="contact">Me, directly</div><div class="when flag">Always</div></div>
+  </div>
+</section>
+
+<!-- POSTCARD -->
+<section class="postcard-section" id="postcard">
+  <div class="postcard-eyebrow">A note before I go</div>
+  <h2 class="postcard-title">Greetings<br>from Memphis</h2>
+  <p class="postcard-sub">Tennessee, technically. But you get the idea.</p>
+
+  <div class="postcard" id="postcardEl">
+    <div class="postcard-left">
+      <div class="greeting">Dear all,</div>
+      <p class="body">
+        I'll be in Memphis for a wedding from <strong>Wed 20 May to Wed 27 May</strong>, back at the desk on <em>Thursday the 28th</em>. The handover above covers every base. If something is genuinely on fire — and only then — my number and email are on the next page.<br><br>
+        Otherwise: hold the fort, look after each other, and try not to break the platform before I'm back.
+      </p>
+      <div class="signoff">— Frazer</div>
+    </div>
+    <div class="postcard-right">
+      <div class="postcard-stamp">
+        <div class="pm">Memphis</div>
+        <div class="place">Tennessee</div>
+        <div class="value">26¢</div>
+      </div>
+      <div class="postcard-address">
+        <span class="to">To:</span>
+        <span class="name">The Team</span><br>
+        Settlements Desk<br>London EC2<br>England
+      </div>
+      <svg class="postmark-svg" id="postmarkSvg" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r="40" />
+        <circle cx="45" cy="45" r="34" />
+        <text x="45" y="22" text-anchor="middle">MEMPHIS</text>
+        <text x="45" y="48" text-anchor="middle" class="date">20 · V</text>
+        <text x="45" y="70" text-anchor="middle">2026</text>
+        <line x1="10" y1="45" x2="20" y2="45" />
+        <line x1="70" y1="45" x2="80" y2="45" />
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- MINI-GAME: PACK FRAZER'S SUITCASE -->
+<section class="game-section" id="game">
+  <div class="game-eyebrow">Interlude · A short game</div>
+  <h2 class="game-title">Pack Frazer's <em>suitcase.</em></h2>
+  <p class="game-sub">Drag what he genuinely needs into the case. Drop something silly in there and the suitcase will let you know. Only <strong>five spaces</strong>, so choose carefully — he doesn't check bags.</p>
+
+  <div class="game-board">
+    <div class="game-items">
+      <div class="item-grid" id="itemGrid">
+        <div class="item" data-id="passport" data-good="1" draggable="true"><span class="emoji">📘</span><span class="name">Passport</span></div>
+        <div class="item" data-id="suit" data-good="1" draggable="true"><span class="emoji">🤵</span><span class="name">Wedding suit</span></div>
+        <div class="item" data-id="phone" data-good="1" draggable="true"><span class="emoji">📱</span><span class="name">Phone (charged)</span></div>
+        <div class="item" data-id="sunglasses" data-good="1" draggable="true"><span class="emoji">🕶️</span><span class="name">Sunglasses</span></div>
+        <div class="item" data-id="shoes" data-good="1" draggable="true"><span class="emoji">👞</span><span class="name">Dress shoes</span></div>
+        <div class="item" data-id="payroll" data-good="0" draggable="true"><span class="emoji">💼</span><span class="name">Whole payroll system</span></div>
+        <div class="item" data-id="kettle" data-good="0" draggable="true"><span class="emoji">🫖</span><span class="name">UK kettle</span></div>
+        <div class="item" data-id="ledger" data-good="0" draggable="true"><span class="emoji">📓</span><span class="name">Settlements ledger</span></div>
+        <div class="item" data-id="monitor" data-good="0" draggable="true"><span class="emoji">🖥️</span><span class="name">Work monitor</span></div>
+        <div class="item" data-id="jono" data-good="0" draggable="true"><span class="emoji">👔</span><span class="name">Jono (the COO)</span></div>
+        <div class="item" data-id="cat" data-good="0" draggable="true"><span class="emoji">🐈</span><span class="name">Office cat</span></div>
+        <div class="item" data-id="rain" data-good="0" draggable="true"><span class="emoji">☔</span><span class="name">London rain</span></div>
+      </div>
+    </div>
+
+    <div class="suitcase" id="suitcase">
+      <div class="suitcase-label">— Cabin only —</div>
+      <div class="suitcase-title">Memphis Bound</div>
+      <div class="suitcase-score">
+        <div class="score-cell"><div class="label">Packed</div><div class="val" id="scorePacked">0 / 5</div></div>
+        <div class="score-cell"><div class="label">Sensible</div><div class="val good" id="scoreGood">0</div></div>
+        <div class="score-cell"><div class="label">Mistakes</div><div class="val bad" id="scoreBad">0</div></div>
+      </div>
+      <div class="suitcase-packed" id="suitcasePacked"></div>
+      <div class="suitcase-feedback" id="suitcaseFeedback">Drop items here.</div>
+      <div class="suitcase-actions">
+        <button class="suitcase-reset" id="suitcaseReset">Unpack & start over</button>
+      </div>
+    </div>
+  </div>
+  <div class="item-ghost" id="itemGhost"></div>
+</section>
+
+<!-- REACH -->
+<section class="reach" id="reach">
+  <div class="reach-eyebrow">In case of need</div>
+  <h2 class="reach-title">I will be reachable<br /><em>for any of the above.</em></h2>
+  <div class="reach-sub">— time zone permitting —</div>
+  <div class="reach-cards">
+    <a class="reach-card magnetic" href="tel:+447786761472">
+      <span class="reach-card-label">Phone (UK)</span>
+      <span class="reach-card-value">07786 761 472</span>
+      <span class="reach-card-arrow">Call now →</span>
+    </a>
+    <a class="reach-card magnetic" href="mailto:frazer@innes.com">
+      <span class="reach-card-label">Email</span>
+      <span class="reach-card-value">frazer@innes.com</span>
+      <span class="reach-card-arrow">Send a note →</span>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-pre">y'all take care now —</div>
+  <h2 class="footer-title">Back <em>soon.</em></h2>
+  <div class="footer-meta">
+    <span>End of Document</span>
+    <span>Composed with care · Memphis bound</span>
+    <span>Frazer Innes · 2026</span>
+  </div>
+</footer>
+
+<script>
+  // ===== UNLOCK SCREEN: SHELL GAME =====
+  // Positions are slot indices 0/1/2 mapped to CSS left percentages.
+  // Football sits under whichever cup currently has data-pos === footballPos.
+  const cups = [document.getElementById('cup0'), document.getElementById('cup1'), document.getElementById('cup2')];
+  const football = document.getElementById('football');
+  const unlockEl = document.getElementById('unlock');
+  const startBtn = document.getElementById('unlockStart');
+  const skipBtn = document.getElementById('unlockSkip');
+  const instr = document.getElementById('unlockInstr');
+  const result = document.getElementById('unlockResult');
+  const resultIcon = document.getElementById('resultIcon');
+  const resultTitle = document.getElementById('resultTitle');
+  const resultMsg = document.getElementById('resultMsg');
+  const resultControls = document.getElementById('resultControls');
+  const attemptsEl = document.getElementById('unlockAttempts');
+  const winsEl = document.getElementById('unlockWins');
+
+  // Slot positions as % of game area (left edge of cup)
+  const SLOT_X = ['8%', '40%', '72%'];
+  // Football centers between cup walls — offset roughly cup_width/2 - football_width/2
+  const FOOTBALL_X = ['calc(8% + 30px)', 'calc(40% + 30px)', 'calc(72% + 30px)'];
+
+  let footballPos = 1; // which slot 0/1/2 holds it
+  let cupSlot = [0, 1, 2]; // cupSlot[i] = which slot cup i currently occupies
+  let gameState = 'idle'; // idle | revealing | shuffling | choosing | done
+  let attempts = 0;
+  let wins = 0;
+
+  function placeCups(animated) {
+    cups.forEach((cup, i) => {
+      if (animated) cup.classList.add('shuffling'); else cup.classList.remove('shuffling');
+      cup.style.left = SLOT_X[cupSlot[i]];
+    });
+  }
+  function placeFootball() {
+    football.style.left = FOOTBALL_X[footballPos];
+  }
+
+  function startGame() {
+    startBtn.style.display = 'none';
+    skipBtn.style.display = 'none';
+    result.classList.remove('active');
+    cups.forEach(c => { c.classList.remove('lifting', 'wrong'); c.style.pointerEvents = 'none'; });
+
+    // Reset football to slot 1, show it, lift the middle cup briefly so user sees the placement
+    footballPos = 1;
+    cupSlot = [0, 1, 2];
+    placeCups(false);
+    placeFootball();
+    football.classList.remove('hidden');
+
+    instr.innerHTML = '<strong>Football placed.</strong> Watch the middle cup...';
+
+    // Lift the middle cup (cup at slot 1 — which is cup index 1 right now) to reveal football
+    setTimeout(() => {
+      const lift = cups.find(c => parseInt(c.dataset.pos, 10) === 1);
+      lift.classList.add('lifting');
+      lift.style.transform = 'translateY(-180px)';
+    }, 600);
+
+    // Lower the cup back, hide football beneath
+    setTimeout(() => {
+      const lift = cups.find(c => parseInt(c.dataset.pos, 10) === 1);
+      lift.style.transform = '';
+      lift.classList.remove('lifting');
+      instr.innerHTML = '<strong>Got it?</strong> Here we go — keep your eye on the ball.';
+    }, 1800);
+
+    // Hide football under the cup
+    setTimeout(() => {
+      football.classList.add('hidden');
+    }, 2400);
+
+    // Begin shuffling
+    setTimeout(() => beginShuffle(), 2700);
+  }
+
+  function beginShuffle() {
+    gameState = 'shuffling';
+    const SHUFFLES = 7;
+    let count = 0;
+    instr.textContent = 'Shuffling...';
+
+    function nextSwap() {
+      if (count >= SHUFFLES) {
+        finishShuffle();
+        return;
+      }
+      // Pick two distinct slots to swap
+      const a = Math.floor(Math.random() * 3);
+      let b = Math.floor(Math.random() * 3);
+      while (b === a) b = Math.floor(Math.random() * 3);
+
+      // Find the cups currently in slots a and b
+      const cupA = cups.findIndex(c => cupSlot[c === cups[0] ? 0 : c === cups[1] ? 1 : 2] === a);
+      // Simpler: derive directly
+      let idxA = -1, idxB = -1;
+      cups.forEach((c, i) => {
+        if (cupSlot[i] === a) idxA = i;
+        if (cupSlot[i] === b) idxB = i;
+      });
+      // Swap their slots
+      [cupSlot[idxA], cupSlot[idxB]] = [cupSlot[idxB], cupSlot[idxA]];
+      // If football was at slot a or b, move with that cup's destination
+      if (footballPos === a) footballPos = b;
+      else if (footballPos === b) footballPos = a;
+
+      placeCups(true);
+      count++;
+      setTimeout(nextSwap, 480);
+    }
+    nextSwap();
+  }
+
+  function finishShuffle() {
+    gameState = 'choosing';
+    instr.innerHTML = '<strong>Your turn.</strong> Tap the cup with the football underneath.';
+    cups.forEach(c => {
+      c.style.pointerEvents = 'auto';
+      c.style.cursor = 'pointer';
+    });
+  }
+
+  cups.forEach((cup, i) => {
+    cup.addEventListener('click', () => {
+      if (gameState !== 'choosing') return;
+      gameState = 'done';
+      attempts++;
+      attemptsEl.textContent = attempts;
+      cups.forEach(c => c.style.pointerEvents = 'none');
+
+      const chosenSlot = cupSlot[i];
+      const correct = chosenSlot === footballPos;
+
+      // Lift the chosen cup; place football under it (revealing the truth)
+      football.style.left = FOOTBALL_X[footballPos];
+      football.classList.remove('hidden');
+      // Show football at its actual slot
+      const winningCupIdx = cups.findIndex((c, idx) => cupSlot[idx] === footballPos);
+
+      if (correct) {
+        cup.classList.add('lifting');
+        cup.style.transform = 'translateY(-180px)';
+        wins++;
+        winsEl.textContent = wins;
+        setTimeout(() => showResult(true), 800);
+      } else {
+        // Shake the wrong cup, then lift the correct one to reveal
+        cup.classList.add('wrong');
+        setTimeout(() => {
+          const winCup = cups[winningCupIdx];
+          winCup.classList.add('lifting');
+          winCup.style.transform = 'translateY(-180px)';
+        }, 600);
+        setTimeout(() => showResult(false), 1500);
+      }
+    });
+  });
+
+  function showResult(won) {
+    resultControls.innerHTML = '';
+    if (won) {
+      result.className = 'unlock-result active win';
+      resultIcon.textContent = '🏈';
+      resultTitle.textContent = 'Touchdown.';
+      resultMsg.textContent = "You've earned passage. Welcome to the handover.";
+      const proceed = document.createElement('button');
+      proceed.className = 'unlock-btn';
+      proceed.textContent = 'Enter the handover →';
+      proceed.addEventListener('click', dismissUnlock);
+      resultControls.appendChild(proceed);
+      // Auto-proceed after 2.5s so it doesn't sit there forever
+      setTimeout(() => { if (document.body.classList.contains('locked')) dismissUnlock(); }, 2800);
+    } else {
+      result.className = 'unlock-result active lose';
+      resultIcon.textContent = '🤠';
+      resultTitle.textContent = 'Bad luck, partner.';
+      const losses = ['Cups had other ideas.', 'The football had places to be.', "Close, but Memphis wasn't fooled.", "Frazer's seen better."];
+      resultMsg.textContent = losses[Math.floor(Math.random() * losses.length)];
+      const again = document.createElement('button');
+      again.className = 'unlock-btn';
+      again.textContent = 'Try again';
+      again.addEventListener('click', () => { result.classList.remove('active'); startGame(); });
+      const skip = document.createElement('button');
+      skip.className = 'unlock-btn ghost';
+      skip.textContent = 'Skip & enter';
+      skip.addEventListener('click', dismissUnlock);
+      resultControls.appendChild(again);
+      resultControls.appendChild(skip);
+    }
+  }
+
+  function dismissUnlock() {
+    unlockEl.classList.add('gone');
+    document.body.classList.remove('locked');
+    // Remove the unlock node after transition so it doesn't intercept anything
+    setTimeout(() => { if (unlockEl.parentNode) unlockEl.parentNode.removeChild(unlockEl); }, 1100);
+    // Kick the loader (which was waiting underneath) into life
+    document.documentElement.classList.add('unlocked');
+  }
+
+  // Initial placement
+  cupSlot = [0, 1, 2];
+  placeCups(false);
+  footballPos = 1;
+  placeFootball();
+  football.classList.add('hidden');
+
+  startBtn.addEventListener('click', startGame);
+  skipBtn.addEventListener('click', dismissUnlock);
+
+  // ============================================
+  // ===== ORIGINAL PAGE SCRIPT BELOW ===========
+  // ============================================
+
+
+  const rayOuter = document.getElementById('sunRaysOuter');
+  const rayInner = document.getElementById('sunRaysInner');
+  for (let i = 0; i < 24; i++) {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', '100,4 96,40 104,40');
+    poly.setAttribute('transform', `rotate(${i * 15} 100 100)`);
+    rayOuter.appendChild(poly);
+  }
+  for (let i = 0; i < 24; i++) {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', '100,20 97,50 103,50');
+    poly.setAttribute('transform', `rotate(${i * 15 + 7.5} 100 100)`);
+    rayInner.appendChild(poly);
+  }
+
+  // ===== PARTICLES (drifting paper flecks) =====
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function initParticles() {
+    particles = [];
+    const count = window.innerWidth < 900 ? 0 : 40;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: -Math.random() * 0.25 - 0.05,
+        size: Math.random() * 1.5 + 0.3,
+        opacity: Math.random() * 0.3 + 0.05,
+        color: Math.random() > 0.7 ? '#b53a1a' : '#a06a18'
+      });
+    }
+  }
+  initParticles();
+  window.addEventListener('resize', initParticles);
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.opacity;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+
+  // ===== CURSOR + TRAIL =====
+  const cursor = document.getElementById('cursor');
+  let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  let tx = cx, ty = cy;
+  document.addEventListener('mousemove', (e) => { tx = e.clientX; ty = e.clientY; });
+  function animateCursor() {
+    cx += (tx - cx) * 0.2;
+    cy += (ty - cy) * 0.2;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+  const trails = [];
+  for (let i = 0; i < 6; i++) {
+    const t = document.createElement('div');
+    t.className = 'cursor-trail';
+    t.style.opacity = (0.5 - i * 0.07).toString();
+    t.style.width = t.style.height = (6 - i * 0.6) + 'px';
+    document.body.appendChild(t);
+    trails.push({ el: t, x: cx, y: cy, delay: 0.18 - i * 0.022 });
+  }
+  function animateTrails() {
+    trails.forEach((t, i) => {
+      const target = i === 0 ? { x: tx, y: ty } : trails[i - 1];
+      t.x += (target.x - t.x) * t.delay;
+      t.y += (target.y - t.y) * t.delay;
+      t.el.style.left = t.x + 'px';
+      t.el.style.top = t.y + 'px';
+    });
+    requestAnimationFrame(animateTrails);
+  }
+  animateTrails();
+  document.querySelectorAll('a, .frame, .stack-card, .ledger-row, .reach-card, .postcard').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+  });
+
+  // Unlock-screen hover targets (cups, buttons)
+  document.querySelectorAll('.cup, .unlock-btn').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+  });
+
+  // ===== MAGNETIC CARDS =====
+  document.querySelectorAll('.magnetic').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      card.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+
+  // ===== POSTCARD 3D TILT =====
+  const postcard = document.getElementById('postcardEl');
+  const postcardSection = document.getElementById('postcard');
+  postcardSection.addEventListener('mousemove', (e) => {
+    const rect = postcard.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    postcard.style.transform = `rotate(-1deg) rotateY(${x * 12}deg) rotateX(${-y * 10}deg) translateZ(0)`;
+  });
+  postcardSection.addEventListener('mouseleave', () => {
+    postcard.style.transform = '';
+  });
+
+  // ===== CLOCKS =====
+  function updateClocks() {
+    const now = new Date();
+    const ldn = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+    const mem = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago', hour12: false });
+    document.getElementById('navTime').textContent = ldn;
+    document.getElementById('navTimeMem').textContent = mem;
+  }
+  updateClocks();
+  setInterval(updateClocks, 30000);
+
+  // ===== SCRAMBLE TITLES =====
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*<>?/';
+  function scramble(el, finalText, duration = 1200, delay = 0) {
+    setTimeout(() => {
+      const len = finalText.length;
+      let frame = 0;
+      const totalFrames = Math.floor(duration / 40);
+      const lockFrames = new Array(len).fill(0).map((_, i) => Math.floor((i / len) * totalFrames * 0.8) + Math.floor(totalFrames * 0.2));
+      const interval = setInterval(() => {
+        let out = '';
+        for (let i = 0; i < len; i++) {
+          if (frame >= lockFrames[i]) {
+            out += finalText[i];
+          } else if (finalText[i] === ' ') {
+            out += ' ';
+          } else {
+            out += chars[Math.floor(Math.random() * chars.length)];
+          }
+        }
+        el.textContent = out;
+        frame++;
+        if (frame > totalFrames) {
+          el.textContent = finalText;
+          clearInterval(interval);
+        }
+      }, 40);
+    }, delay);
+  }
+  // Trigger scramble after loader
+  setTimeout(() => {
+    document.querySelectorAll('.hero-title .scrambled').forEach((el, i) => {
+      const final = el.dataset.text;
+      el.textContent = '';
+      scramble(el, final, 1200, i * 150);
+    });
+  }, 5600);
+
+  // ===== HERO PARALLAX =====
+  const heroWrap = document.querySelector('.hero-wrap');
+  const heroInner = document.getElementById('heroInner');
+  const heroStamp = document.getElementById('heroStamp');
+  const heroVinyl = document.getElementById('heroVinyl');
+  const heroBgNum = document.getElementById('heroBgNum');
+
+  function onScrollHero() {
+    const rect = heroWrap.getBoundingClientRect();
+    const total = heroWrap.offsetHeight - window.innerHeight;
+    const progress = Math.min(1, Math.max(0, -rect.top / total));
+    const scale = 1 + progress * 0.7;
+    const opacity = 1 - progress * 1.2;
+    heroInner.style.transform = `scale(${scale})`;
+    heroInner.style.opacity = Math.max(0, opacity);
+    heroStamp.style.transform = `rotate(${8 + progress * 12}deg) translateY(${-progress * 80}px)`;
+    heroVinyl.style.transform = `translateY(${progress * 120}px) translateX(${-progress * 60}px)`;
+    heroBgNum.style.transform = `translateX(-50%) translateY(${-progress * 200}px) scale(${1 + progress * 0.3})`;
+  }
+
+  // ===== INTRO WORDS =====
+  const introWords = document.querySelectorAll('#introText .word');
+  function onScrollIntro() {
+    const trigger = window.innerHeight * 0.55;
+    introWords.forEach(w => {
+      const rect = w.getBoundingClientRect();
+      if (rect.top < trigger && rect.bottom > 0) w.classList.add('lit');
+    });
+  }
+
+  // ===== JOURNEY MAP ANIMATION =====
+  const flightPath = document.getElementById('flightPath');
+  const planeGroup = document.getElementById('planeGroup');
+  const journeySection = document.getElementById('journey');
+  let pathLength = 0;
+  if (flightPath) {
+    pathLength = flightPath.getTotalLength();
+    flightPath.style.strokeDasharray = `${pathLength}`;
+    flightPath.style.strokeDashoffset = `${pathLength}`;
+  }
+
+  function onScrollJourney() {
+    if (!flightPath) return;
+    const rect = journeySection.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // Start when section enters viewport, finish when its center hits viewport center
+    const progress = Math.min(1, Math.max(0, (vh - rect.top) / (vh + rect.height * 0.5)));
+
+    flightPath.style.strokeDashoffset = `${pathLength * (1 - progress)}`;
+
+    if (progress > 0) {
+      const point = flightPath.getPointAtLength(pathLength * progress);
+      // Compute tangent for plane rotation
+      const aheadPoint = flightPath.getPointAtLength(Math.min(pathLength, pathLength * progress + 1));
+      const angle = Math.atan2(aheadPoint.y - point.y, aheadPoint.x - point.x) * 180 / Math.PI;
+      planeGroup.setAttribute('transform', `translate(${point.x}, ${point.y}) rotate(${angle})`);
+      planeGroup.style.opacity = '1';
+    } else {
+      planeGroup.style.opacity = '0';
+    }
+  }
+
+  // ===== REEL (scroll + drag) =====
+  const reelWrap = document.getElementById('reel');
+  const reelTrack = document.getElementById('reelTrack');
+  const reelProgress = document.getElementById('reelProgress');
+  const reelCurrent = document.getElementById('reelCurrent');
+  let lastFrameIdx = 1;
+  let dragOffset = 0;
+
+  function onScrollReel() {
+    const rect = reelWrap.getBoundingClientRect();
+    const total = reelWrap.offsetHeight - window.innerHeight;
+    const progress = Math.min(1, Math.max(0, -rect.top / total));
+    const maxTranslate = reelTrack.scrollWidth - window.innerWidth;
+    reelTrack.style.transform = `translateX(${-(progress * maxTranslate + dragOffset)}px)`;
+    reelProgress.style.width = `${progress * 100}%`;
+    const frameIndex = Math.min(4, Math.floor(progress * 4) + 1);
+    if (frameIndex !== lastFrameIdx) {
+      reelCurrent.classList.remove('flip');
+      void reelCurrent.offsetWidth;
+      reelCurrent.classList.add('flip');
+      lastFrameIdx = frameIndex;
+    }
+    reelCurrent.textContent = '0' + frameIndex;
+  }
+
+  // Drag support on reel
+  let isDragging = false;
+  let dragStartX = 0;
+  reelTrack.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    cursor.classList.add('drag');
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const delta = dragStartX - e.clientX;
+    // Convert drag delta into scroll delta (1:1)
+    window.scrollBy(0, delta * 0.5);
+    dragStartX = e.clientX;
+  });
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      cursor.classList.remove('drag');
+    }
+  });
+
+  // ===== PROGRESS + RAIL =====
+  const progressBar = document.getElementById('progressBar');
+  const railItems = document.querySelectorAll('.rail-item');
+  const sections = ['hero', 'intro', 'journey', 'reel', 'stack', 'ledger', 'postcard', 'game', 'reach'];
+  function onScrollProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = Math.min(1, scrollTop / docHeight);
+    progressBar.style.width = `${progress * 100}%`;
+    let activeIdx = 0;
+    sections.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 0.4) activeIdx = i;
+      }
+    });
+    railItems.forEach((item, i) => item.classList.toggle('active', i === activeIdx));
+  }
+
+  // ===== VINYL SCROLL VELOCITY =====
+  const vinylDisc = document.getElementById('vinylDisc');
+  let vinylRotation = 0;
+  let scrollVelocity = 0;
+  let lastScrollY = window.scrollY;
+  let lastScrollTime = performance.now();
+
+  function updateVinyl() {
+    const now = performance.now();
+    const deltaTime = now - lastScrollTime;
+    if (deltaTime > 0) {
+      const deltaScroll = window.scrollY - lastScrollY;
+      const targetVelocity = deltaScroll / deltaTime * 100;
+      scrollVelocity += (targetVelocity - scrollVelocity) * 0.1;
+    }
+    // Always spinning at baseline + scroll velocity
+    vinylRotation += 0.5 + scrollVelocity * 0.4;
+    if (vinylDisc) vinylDisc.style.transform = `rotate(${vinylRotation}deg)`;
+    lastScrollY = window.scrollY;
+    lastScrollTime = now;
+    // Decay velocity
+    scrollVelocity *= 0.92;
+    requestAnimationFrame(updateVinyl);
+  }
+  updateVinyl();
+
+  // ===== POSTMARK DRAW-IN =====
+  const postmark = document.getElementById('postmarkSvg');
+  const postmarkObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        postmark.classList.add('drawn');
+      }
+    });
+  }, { threshold: 0.3 });
+  if (postmark) postmarkObserver.observe(postmark);
+
+  // ===== KINETIC MARQUEE SCROLL-RATE REACTIVE =====
+  const kineticTrack = document.getElementById('kineticTrack');
+  const marqueeTrack = document.getElementById('marqueeTrack');
+  let scrollSpeed = 0;
+  let lastY = window.scrollY;
+  setInterval(() => {
+    const delta = Math.abs(window.scrollY - lastY);
+    scrollSpeed += (delta - scrollSpeed) * 0.3;
+    lastY = window.scrollY;
+    // Faster scroll = faster marquee
+    const baseSpeed = 18;
+    const kDur = Math.max(4, baseSpeed - scrollSpeed * 0.2);
+    if (kineticTrack) kineticTrack.style.setProperty('--k-duration', kDur + 's');
+    const mqDur = Math.max(8, 28 - scrollSpeed * 0.3);
+    if (marqueeTrack) marqueeTrack.style.setProperty('--mq-duration', mqDur + 's');
+  }, 100);
+
+  // ===== NOW PLAYING ROTATOR =====
+  const tracks = [
+    'Memphis Bound — F. Innes',
+    'Orderly Absence (Side A)',
+    'Reachable Blues',
+    'Ballad of the Settlements Desk',
+    'Wedding Bells in Tennessee',
+    'Hold The Fort (Reprise)',
+  ];
+  let trackIdx = 0;
+  setInterval(() => {
+    trackIdx = (trackIdx + 1) % tracks.length;
+    const el = document.getElementById('npTitle');
+    if (el) {
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.textContent = tracks[trackIdx];
+        el.style.opacity = '1';
+      }, 300);
+    }
+  }, 5500);
+  const npTitleEl = document.getElementById('npTitle');
+  if (npTitleEl) npTitleEl.style.transition = 'opacity 0.3s';
+
+  // ===== KONAMI ↑↑↓↓←→←→BA =====
+  const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiIdx = 0;
+  const konamiOverlay = document.getElementById('konami');
+  window.addEventListener('keydown', (e) => {
+    if (e.key === konami[konamiIdx] || e.key.toLowerCase() === konami[konamiIdx]) {
+      konamiIdx++;
+      if (konamiIdx === konami.length) {
+        konamiOverlay.classList.add('active');
+        setTimeout(() => konamiOverlay.classList.remove('active'), 3000);
+        konamiIdx = 0;
+      }
+    } else {
+      konamiIdx = 0;
+    }
+  });
+
+  // ===== MINI-GAME: PACK FRAZER'S SUITCASE =====
+  const itemGrid = document.getElementById('itemGrid');
+  const suitcase = document.getElementById('suitcase');
+  const suitcasePacked = document.getElementById('suitcasePacked');
+  const suitcaseFeedback = document.getElementById('suitcaseFeedback');
+  const scorePacked = document.getElementById('scorePacked');
+  const scoreGood = document.getElementById('scoreGood');
+  const scoreBad = document.getElementById('scoreBad');
+  const suitcaseReset = document.getElementById('suitcaseReset');
+  const itemGhost = document.getElementById('itemGhost');
+
+  const MAX_PACKED = 5;
+  let packed = []; // {id, good, name, emoji}
+
+  const goodFeedback = [
+    "Sensible. Frazer approves.",
+    "Now that's vacation thinking.",
+    "Smart pack. Carry on.",
+    "Memphis-ready.",
+    "He'll be glad you remembered.",
+  ];
+  const badFeedback = [
+    "Why on earth would he need that?",
+    "Hard pass. Try again.",
+    "TSA would have questions.",
+    "Even Jono is concerned.",
+    "Read the room. He's going to a wedding.",
+  ];
+  const winFeedback = [
+    "Five perfect picks. Plane's boarding.",
+    "Faultless packing. Memphis bound.",
+    "Suitcase: closed. Frazer: thrilled.",
+  ];
+  const loseFeedback = [
+    "He's not even getting to the airport with this.",
+    "The wedding party would be horrified.",
+    "Frazer just looked at this and sighed.",
+  ];
+
+  function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function renderPacked() {
+    suitcasePacked.innerHTML = '';
+    packed.forEach(p => {
+      const chip = document.createElement('div');
+      chip.className = 'packed-chip' + (p.good ? '' : ' bad');
+      chip.innerHTML = `<span>${p.emoji}</span><span>${p.name}</span>`;
+      suitcasePacked.appendChild(chip);
+    });
+    const goodCount = packed.filter(p => p.good).length;
+    const badCount = packed.filter(p => !p.good).length;
+    scorePacked.textContent = `${packed.length} / ${MAX_PACKED}`;
+    scoreGood.textContent = goodCount;
+    scoreBad.textContent = badCount;
+
+    if (packed.length >= MAX_PACKED) {
+      if (badCount === 0) {
+        suitcaseFeedback.textContent = pickRandom(winFeedback);
+        suitcaseFeedback.className = 'suitcase-feedback good';
+      } else if (badCount >= 3) {
+        suitcaseFeedback.textContent = pickRandom(loseFeedback);
+        suitcaseFeedback.className = 'suitcase-feedback bad';
+      } else {
+        suitcaseFeedback.textContent = `Packed. ${goodCount} sensible, ${badCount} regrettable.`;
+        suitcaseFeedback.className = 'suitcase-feedback';
+      }
+    }
+  }
+
+  function tryPack(itemEl) {
+    if (packed.length >= MAX_PACKED) {
+      suitcaseFeedback.textContent = "Suitcase is full. Unpack to try different choices.";
+      suitcaseFeedback.className = 'suitcase-feedback bad';
+      return false;
+    }
+    const id = itemEl.dataset.id;
+    if (packed.find(p => p.id === id)) return false;
+    const good = itemEl.dataset.good === '1';
+    const name = itemEl.querySelector('.name').textContent;
+    const emoji = itemEl.querySelector('.emoji').textContent;
+    packed.push({ id, good, name, emoji });
+    itemEl.classList.add('packed');
+    if (good) {
+      suitcaseFeedback.textContent = pickRandom(goodFeedback);
+      suitcaseFeedback.className = 'suitcase-feedback good';
+    } else {
+      suitcaseFeedback.textContent = pickRandom(badFeedback);
+      suitcaseFeedback.className = 'suitcase-feedback bad';
+    }
+    renderPacked();
+    return true;
+  }
+
+  // Native HTML5 drag-and-drop (works on desktop)
+  let draggedItem = null;
+  document.querySelectorAll('.item').forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      if (item.classList.contains('packed')) { e.preventDefault(); return; }
+      draggedItem = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.dataset.id);
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      draggedItem = null;
+    });
+    // Also support click-to-pack as a fallback / quick action
+    item.addEventListener('click', () => {
+      if (!item.classList.contains('packed')) tryPack(item);
+    });
+  });
+
+  suitcase.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    suitcase.classList.add('over');
+  });
+  suitcase.addEventListener('dragleave', () => suitcase.classList.remove('over'));
+  suitcase.addEventListener('drop', (e) => {
+    e.preventDefault();
+    suitcase.classList.remove('over');
+    if (draggedItem) tryPack(draggedItem);
+  });
+
+  // Ghost preview during drag (visual flair beyond browser default)
+  document.addEventListener('dragover', (e) => {
+    if (draggedItem) {
+      itemGhost.style.left = e.clientX + 'px';
+      itemGhost.style.top = e.clientY + 'px';
+    }
+  });
+
+  suitcaseReset.addEventListener('click', () => {
+    packed = [];
+    document.querySelectorAll('.item.packed').forEach(el => el.classList.remove('packed'));
+    suitcasePacked.innerHTML = '';
+    scorePacked.textContent = '0 / 5';
+    scoreGood.textContent = '0';
+    scoreBad.textContent = '0';
+    suitcaseFeedback.textContent = 'Drop items here.';
+    suitcaseFeedback.className = 'suitcase-feedback';
+  });
+
+  // ===== SECRET WORD WATCHER =====
+  let typedBuffer = '';
+  const SECRETS = {
+    'memphis': triggerNeon,
+    'sun': triggerSun,
+    'vinyl': triggerOrbitVinyl,
+    'wedding': triggerConfetti,
+  };
+  window.addEventListener('keydown', (e) => {
+    // Only single letter keys
+    if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+      typedBuffer = (typedBuffer + e.key.toLowerCase()).slice(-12);
+      Object.keys(SECRETS).forEach(word => {
+        if (typedBuffer.endsWith(word)) {
+          SECRETS[word]();
+          typedBuffer = '';
+        }
+      });
+    }
+  });
+
+  // SECRET 1 — neon "MEMPHIS" sign
+  function triggerNeon() {
+    const overlay = document.getElementById('neonOverlay');
+    const sign = document.getElementById('neonSign');
+    sign.innerHTML = '';
+    const letters = 'MEMPHIS'.split('');
+    letters.forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      if (Math.random() < 0.3) span.classList.add('flicker');
+      span.style.animationDelay = (Math.random() * 0.5) + 's';
+      sign.appendChild(span);
+    });
+    overlay.classList.add('active');
+    setTimeout(() => overlay.classList.remove('active'), 3500);
+  }
+
+  // SECRET 2 — Sun Records takeover
+  function triggerSun() {
+    const overlay = document.getElementById('sunOverlay');
+    overlay.classList.add('active');
+    setTimeout(() => overlay.classList.remove('active'), 4000);
+  }
+
+  // SECRET 3 — Orbiting vinyl follows cursor in circles
+  let orbitActive = false;
+  let orbitAngle = 0;
+  const orbitEl = document.getElementById('orbitVinyl');
+  function triggerOrbitVinyl() {
+    if (orbitActive) return;
+    orbitActive = true;
+    orbitEl.classList.add('active');
+    const start = performance.now();
+    function tick(now) {
+      const elapsed = now - start;
+      if (elapsed > 6000) {
+        orbitActive = false;
+        orbitEl.classList.remove('active');
+        return;
+      }
+      orbitAngle += 0.05;
+      const radius = 120;
+      const ox = tx + Math.cos(orbitAngle) * radius;
+      const oy = ty + Math.sin(orbitAngle) * radius;
+      orbitEl.style.left = (ox - 60) + 'px';
+      orbitEl.style.top = (oy - 60) + 'px';
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // SECRET 4 — Confetti & rice cascade (wedding!)
+  function triggerConfetti() {
+    const colors = ['#b53a1a', '#c89030', '#f1e6cf', '#8a2614', '#a06a18'];
+    const count = 120;
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const isRice = Math.random() > 0.6;
+      if (isRice) {
+        piece.style.background = '#f8efd9';
+        piece.style.width = '4px';
+        piece.style.height = '10px';
+        piece.style.borderRadius = '50%';
+      } else {
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const sq = Math.random() > 0.5;
+        if (sq) piece.style.borderRadius = '2px';
+        const size = 6 + Math.random() * 8;
+        piece.style.width = size + 'px';
+        piece.style.height = size + 'px';
+      }
+      piece.style.left = Math.random() * window.innerWidth + 'px';
+      piece.style.top = '-20px';
+      document.body.appendChild(piece);
+      const drift = (Math.random() - 0.5) * 300;
+      const duration = 2500 + Math.random() * 2000;
+      const rotation = (Math.random() - 0.5) * 720;
+      piece.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${drift}px, ${window.innerHeight + 50}px) rotate(${rotation}deg)`, opacity: 0.8 }
+      ], { duration, easing: 'cubic-bezier(0.4, 0, 0.6, 1)' });
+      setTimeout(() => piece.remove(), duration + 100);
+    }
+  }
+
+  // SECRET 5 — Triple-click the "Back soon." title to shatter it
+  const footerTitle = document.querySelector('.footer-title');
+  let footerClicks = 0;
+  let footerClickTimer = null;
+  if (footerTitle) {
+    footerTitle.style.cursor = 'none';
+    footerTitle.addEventListener('click', () => {
+      footerClicks++;
+      clearTimeout(footerClickTimer);
+      footerClickTimer = setTimeout(() => { footerClicks = 0; }, 800);
+      if (footerClicks >= 3) {
+        footerClicks = 0;
+        shatterTitle();
+      }
+    });
+  }
+
+  function shatterTitle() {
+    const text = footerTitle.textContent;
+    const rect = footerTitle.getBoundingClientRect();
+    const computed = window.getComputedStyle(footerTitle);
+    const fontSize = computed.fontSize;
+    footerTitle.style.visibility = 'hidden';
+
+    // Split each char into a flying piece
+    const chars = text.split('');
+    chars.forEach((ch, i) => {
+      if (ch === ' ') return;
+      const piece = document.createElement('span');
+      piece.className = 'shatter-piece';
+      piece.textContent = ch;
+      piece.style.fontSize = fontSize;
+      piece.style.lineHeight = '0.85';
+      // Estimate char position
+      const charWidth = rect.width / chars.length;
+      piece.style.left = (rect.left + i * charWidth) + 'px';
+      piece.style.top = rect.top + 'px';
+      // Em-dash for "Back" and "soon" colorisation
+      if (ch === 's' || ch === 'o' || ch === 'n' || ch === '.') {
+        piece.style.color = 'var(--rust)';
+        piece.style.fontStyle = 'italic';
+      }
+      document.body.appendChild(piece);
+      const dx = (Math.random() - 0.5) * 800;
+      const dy = -200 - Math.random() * 300;
+      const rot = (Math.random() - 0.5) * 1080;
+      piece.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration: 1800, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)' });
+      setTimeout(() => piece.remove(), 1900);
+    });
+
+    // Restore title after pieces fall
+    setTimeout(() => { footerTitle.style.visibility = 'visible'; }, 2000);
+  }
+
+  // ===== MASTER SCROLL =====
+  let ticking = false;
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        onScrollHero();
+        onScrollIntro();
+        onScrollJourney();
+        onScrollReel();
+        onScrollProgress();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+
+</body>
+</html>
